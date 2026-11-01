@@ -49,6 +49,7 @@ export default function ConsoleLoginPage() {
           features={FEATURES}
           mockupSrc="/images/edupro_mockup_clean_flush.png"
           mockupAlt="EduPro Owner Console preview"
+          brandSubtitle="Owner Console"
           footerTagline="EduPro Owner Console — for platform administrators only"
           topBadge={
             <ToneBadge tone="orange" variant="pill" size="sm">
@@ -56,7 +57,7 @@ export default function ConsoleLoginPage() {
             </ToneBadge>
           }
         />
-        <AuthRightPanel title="Owner sign-in" subtitle="Sign in with your platform owner account to manage institutions and billing.">
+        <AuthRightPanel brandSubtitle="Owner Console" title="Owner sign-in" subtitle="Sign in with your platform owner account to manage institutions and billing.">
           <Suspense fallback={<LoginFormSkeleton />}>
             <ConsoleLoginForm />
           </Suspense>

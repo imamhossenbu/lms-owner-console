@@ -7,7 +7,7 @@ export function InvoicesSkeleton() {
   return (
     <div className="space-y-5 pb-8 text-left animate-pulse" aria-busy="true" aria-label="Loading invoices">
       <ConsoleHeaderSkeleton actions={1} />
-      <KpiRowSkeleton count={4} className="2xl:grid-cols-4" />
+      <KpiRowSkeleton count={4} className="xl:grid-cols-4" />
       <div className="space-y-4 rounded-xl border border-dash bg-white p-5">
         <FiltersSkeleton selects={3} />
         <ColumnTableSkeleton

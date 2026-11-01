@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import { Home } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/Breadcrumb";
+import type { BreadcrumbItem } from "@/components/ui/Breadcrumb";
+import { ConsoleHeader } from "../subscriptions/shared/ConsoleHeader";
 
 export interface ConsolePageHeaderProps {
-  /** Trail after "🏠 Console", e.g. [{ label: "Institutions", href: "/institutions" }, { label: "Add" }]. */
+  /** Trail after the 🏠 icon, e.g. [{ label: "Institutions", href: "/institutions" }, { label: "Add" }]. */
   trail: BreadcrumbItem[];
   title: React.ReactNode;
   subtitle?: string;
@@ -14,17 +13,9 @@ export interface ConsolePageHeaderProps {
   actions?: React.ReactNode;
 }
 
-const CONSOLE_HOME: BreadcrumbItem = { label: "Console", href: "/", icon: <Home className="h-4 w-4" /> };
-
-/** Shared PageHeader with the console breadcrumb (🏠 Console › …). No back buttons. */
-export function ConsolePageHeader({ trail, title, subtitle, badge, actions }: ConsolePageHeaderProps) {
-  const items = trail.length ? [CONSOLE_HOME, ...trail] : [{ ...CONSOLE_HOME, href: undefined }];
-  return (
-    <div className="space-y-2.5">
-      <Breadcrumb items={items} showHome={false} />
-      <PageHeader title={title} subtitle={subtitle} badge={badge} action={actions} className="mb-0" />
-    </div>
-  );
+/** Alias of ConsoleHeader (kept for existing callers) — one header design across the console, matching the panel. */
+export function ConsolePageHeader({ trail, ...rest }: ConsolePageHeaderProps) {
+  return <ConsoleHeader crumbs={trail} {...rest} />;
 }
 
 export default ConsolePageHeader;

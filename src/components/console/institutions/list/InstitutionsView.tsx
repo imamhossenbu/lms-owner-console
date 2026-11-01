@@ -16,7 +16,7 @@ import { useNow } from "../../shared/useNow";
 import { useInstitutionActions } from "../actions/useInstitutionActions";
 import { useInstitutionDialogs } from "../actions/useInstitutionDialogs";
 import { InstitutionsSkeleton } from "./InstitutionsSkeleton";
-import { InstitutionsStatChips } from "./InstitutionsStatChips";
+import { InstitutionStatsRow } from "./InstitutionStatsRow";
 import { InstitutionsTable } from "./InstitutionsTable";
 import {
   applyFilters,
@@ -71,17 +71,16 @@ export function InstitutionsView() {
         title="Institutions"
         subtitle={`${store.institutions.length} tenants · ${formatMoney(Math.round(mrr(store)))} MRR`}
         actions={
-          <PrimaryButton leftIcon={<Plus className="h-4 w-4" />} onClick={() => router.push("/institutions/new")}>
+          <PrimaryButton size="lg" leftIcon={<Plus className="h-4 w-4" />} onClick={() => router.push("/institutions/new")}>
             Add institution
           </PrimaryButton>
         }
       />
 
-      <InstitutionsStatChips institutions={store.institutions} value={filters.status} onChange={(v) => set({ status: v, page: null })} />
+      <InstitutionStatsRow institutions={store.institutions} />
 
-      <section className="dashboard-card overflow-hidden shadow-2xs">
-        <div className="p-5 pb-4">
-          <ListFilters
+      <div className="bg-white rounded-xl border border-dash shadow-2xs p-5 space-y-4">
+        <ListFilters
             query={filters.q}
             searchPlaceholder="Search by name, subdomain, domain, owner or country..."
             onQueryChange={(v) => set({ q: v || null, page: null })}
@@ -93,8 +92,6 @@ export function InstitutionsView() {
             onReset={reset}
             isFiltered={filteredState}
           />
-        </div>
-        <div className="border-t border-dash">
           <InstitutionsTable
             rows={rows}
             plans={store.plans}
@@ -116,20 +113,21 @@ export function InstitutionsView() {
                 />
               )
             }
+            footer={
+              filtered.length > 0 ? (
+              <TablePagination
+                currentPage={page}
+                pageSize={perPage}
+                totalCount={filtered.length}
+                itemLabel={filtered.length === 1 ? "institution" : "institutions"}
+                onPageChange={(next) => set({ page: next })}
+                onPageSizeChange={(size) => set({ perPage: size === PAGE_SIZES[0] ? null : size, page: null })}
+                pageSizeOptions={PAGE_SIZES}
+              />
+              ) : undefined
+            }
           />
-        </div>
-        {filtered.length > 0 && (
-          <TablePagination
-            currentPage={page}
-            pageSize={perPage}
-            totalCount={filtered.length}
-            itemLabel={filtered.length === 1 ? "institution" : "institutions"}
-            onPageChange={(next) => set({ page: next })}
-            onPageSizeChange={(size) => set({ perPage: size === PAGE_SIZES[0] ? null : size, page: null })}
-            pageSizeOptions={PAGE_SIZES}
-          />
-        )}
-      </section>
+      </div>
       {dialogs}
     </motion.div>
   );

@@ -54,24 +54,24 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
         subtitle={`${formatMoney(invoice.total, { cents: true })} · ${institution?.name ?? "Unknown institution"}`}
         actions={
           <>
-            <SecondaryButton type="button" leftIcon={<Printer className="h-4 w-4" />} onClick={() => actions.print(invoice)}>
+            <SecondaryButton size="lg" type="button" leftIcon={<Printer className="h-4 w-4" />} onClick={() => actions.print(invoice)}>
               Print
             </SecondaryButton>
-            <SecondaryButton type="button" leftIcon={<Download className="h-4 w-4" />} onClick={() => actions.download(invoice)}>
+            <SecondaryButton size="lg" type="button" leftIcon={<Download className="h-4 w-4" />} onClick={() => actions.download(invoice)}>
               Download PDF
             </SecondaryButton>
             {canCollect(invoice) && (
               <>
-                <SecondaryButton type="button" leftIcon={<CheckCircle2 className="h-4 w-4" />} onClick={() => actions.requestMarkPaid(invoice)}>
+                <SecondaryButton size="lg" type="button" leftIcon={<CheckCircle2 className="h-4 w-4" />} onClick={() => actions.requestMarkPaid(invoice)}>
                   Mark as paid
                 </SecondaryButton>
-                <PrimaryButton type="button" leftIcon={<RefreshCw className="h-4 w-4" />} isLoading={retrying} disabled={retrying} onClick={() => void actions.retry(invoice)}>
+                <PrimaryButton size="lg" type="button" leftIcon={<RefreshCw className="h-4 w-4" />} isLoading={retrying} disabled={retrying} onClick={() => void actions.retry(invoice)}>
                   {retrying ? "Retrying..." : "Retry payment"}
                 </PrimaryButton>
               </>
             )}
             {invoice.status === "PAID" && (
-              <SecondaryButton type="button" leftIcon={<Undo2 className="h-4 w-4" />} onClick={() => actions.requestRefund(invoice)}>
+              <SecondaryButton size="lg" type="button" leftIcon={<Undo2 className="h-4 w-4" />} onClick={() => actions.requestRefund(invoice)}>
                 Refund
               </SecondaryButton>
             )}

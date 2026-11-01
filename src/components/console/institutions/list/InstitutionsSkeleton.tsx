@@ -1,28 +1,18 @@
 import React from "react";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { ConsoleHeaderSkeleton, FiltersSkeleton, TableSkeleton } from "../../shared/ConsoleSkeletonParts";
+import { ConsoleHeaderSkeleton, FiltersSkeleton } from "../../shared/ConsoleSkeletonParts";
+import { ColumnTableSkeleton, KpiRowSkeleton } from "../../subscriptions/shared/TableSkeleton";
 
-/** Mirrors /console/institutions: header + Add, status chips, filters, table with 8 columns and pagination. */
+const WIDTHS = ["26%", "10%", "11%", "17%", "8%", "11%", "10%", "7%"];
+
+/** Mirrors /institutions: header + Add, 5 KPI cards, filter card with the bordered table and pagination inside. */
 export function InstitutionsSkeleton() {
   return (
-    <div className="space-y-5 pb-8" aria-busy="true" aria-label="Loading institutions">
+    <div className="space-y-5 pb-8 text-left animate-pulse" aria-busy="true" aria-label="Loading institutions">
       <ConsoleHeaderSkeleton actions={1} />
-      <div className="flex flex-wrap gap-2">
-        {[64, 84, 92, 88, 100, 104].map((w, i) => (
-          <Skeleton key={i} className="h-8.5 rounded-xl" style={{ width: w }} />
-        ))}
-      </div>
-      <div className="dashboard-card space-y-4 p-5 shadow-2xs">
+      <KpiRowSkeleton count={5} className="lg:grid-cols-3 2xl:grid-cols-5" />
+      <div className="space-y-4 rounded-xl border border-dash bg-white p-5">
         <FiltersSkeleton selects={3} />
-        <TableSkeleton rows={10} cols={8} />
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-3.5 w-48" />
-          <div className="flex gap-1.5">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-8 w-8 rounded-lg" />
-            ))}
-          </div>
-        </div>
+        <ColumnTableSkeleton columns={["institution", "twoLine", "twoLine", "twoLine", "money", "twoLine", "twoLine", "menu"]} widths={WIDTHS} rows={10} />
       </div>
     </div>
   );

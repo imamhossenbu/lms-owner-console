@@ -30,10 +30,9 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
     {
       key: "number",
       header: "Number",
-      width: "14%",
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate font-mono body-sm-medium text-primary-500" title={row.number}>
+          <p className="whitespace-nowrap body-sm-medium text-primary-500" title={row.number}>
             {row.number}
           </p>
           <p className="truncate body-xsm-regular text-primary-300" title={row.description}>
@@ -42,11 +41,10 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
         </div>
       ),
     },
-    { key: "institution", header: "Institution", width: "23%", render: (row) => <InstitutionCell institution={institutions.get(row.institutionId)} /> },
+    { key: "institution", header: "Institution", render: (row) => <InstitutionCell institution={institutions.get(row.institutionId)} /> },
     {
       key: "period",
       header: "Period",
-      width: "16%",
       render: (row) => (
         <span className="block truncate body-sm-regular text-primary-500" title={formatPeriod(row.periodStart, row.periodEnd)}>
           {formatPeriod(row.periodStart, row.periodEnd)}
@@ -56,7 +54,6 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
     {
       key: "amount",
       header: "Amount",
-      width: "10%",
       align: "right",
       sortDirection: sortDir("amount"),
       onHeaderClick: () => onSort("amount"),
@@ -67,11 +64,10 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
         </div>
       ),
     },
-    { key: "status", header: "Status", width: "11%", render: (row) => <InvoiceStatusBadge status={row.status} /> },
+    { key: "status", header: "Status", render: (row) => <InvoiceStatusBadge status={row.status} /> },
     {
       key: "issued",
       header: "Issued",
-      width: "10%",
       sortDirection: sortDir("issued"),
       onHeaderClick: () => onSort("issued"),
       render: (row) => <span className="block truncate body-sm-regular text-primary-500">{formatDate(row.issuedAt)}</span>,
@@ -79,7 +75,6 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
     {
       key: "paid",
       header: "Paid",
-      width: "10%",
       render: (row) =>
         row.paidAt ? (
           <span className="block truncate body-sm-regular text-primary-500">{formatDate(row.paidAt)}</span>
@@ -92,7 +87,6 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
     {
       key: "actions",
       header: "Actions",
-      width: "6%",
       align: "center",
       render: (row) => <RowMoreMenu size="sm" label={`Actions for ${row.number}`} items={getMenuItems(row)} />,
     },
@@ -106,8 +100,7 @@ export function InvoicesTable({ invoices, institutions, planName, sort, dir, onS
         rowKey={(row) => row.id}
         onRowClick={onRowClick}
         verticalBorders
-        tableClassName="table-fixed"
-        containerClassName="border-0 rounded-none overflow-x-hidden"
+        containerClassName="border-0 rounded-none"
         headerClassName="bg-slate-50 border-b border-dash"
         thClassName="px-3.5 py-3 body-xsm-medium text-primary-400 font-semibold! normal-case"
         cellClassName="px-3.5 py-3"

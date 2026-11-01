@@ -7,7 +7,7 @@ export function DomainsSkeleton() {
   return (
     <div className="space-y-5 pb-8 text-left animate-pulse" aria-busy="true" aria-label="Loading domains">
       <ConsoleHeaderSkeleton actions={0} />
-      <KpiRowSkeleton count={5} className="xl:grid-cols-5" />
+      <KpiRowSkeleton count={5} className="lg:grid-cols-3 2xl:grid-cols-5" />
       <div className="space-y-4 rounded-xl border border-dash bg-white p-5">
         <FiltersSkeleton selects={1} />
         <ColumnTableSkeleton columns={["institution", "mono", "badge", "mono", "text", "text", "menu"]} widths={["22%", "21%", "11%", "15%", "10%", "12%", "9%"]} rows={6} pagination={false} />

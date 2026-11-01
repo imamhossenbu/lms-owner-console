@@ -41,23 +41,20 @@ export function SubscriptionsTable({ rows, plans, sort, dir, onSort, onRowClick,
     {
       key: "institution",
       header: "Institution",
-      width: "25%",
       sortDirection: sortDir("name"),
       onHeaderClick: () => onSort("name"),
       render: (row) => <InstitutionCell institution={row.institution} />,
     },
-    { key: "plan", header: "Plan", width: "11%", render: (row) => <PlanBadge planId={row.institution.subscription.planId} plans={plans} /> },
-    { key: "cycle", header: "Cycle", width: "9%", render: (row) => <CycleBadge cycle={row.institution.subscription.cycle} /> },
+    { key: "plan", header: "Plan", render: (row) => <PlanBadge planId={row.institution.subscription.planId} plans={plans} /> },
+    { key: "cycle", header: "Cycle", render: (row) => <CycleBadge cycle={row.institution.subscription.cycle} /> },
     {
       key: "status",
       header: "Status",
-      width: "11%",
       render: (row) => <SubStatusBadge status={row.institution.subscription.status} cancelling={row.institution.subscription.cancelAtPeriodEnd} />,
     },
     {
       key: "mrr",
       header: "MRR",
-      width: "9%",
       align: "right",
       sortDirection: sortDir("mrr"),
       onHeaderClick: () => onSort("mrr"),
@@ -73,7 +70,6 @@ export function SubscriptionsTable({ rows, plans, sort, dir, onSort, onRowClick,
     {
       key: "end",
       header: "Period end / Trial ends",
-      width: "15%",
       sortDirection: sortDir("end"),
       onHeaderClick: () => onSort("end"),
       render: (row) => {
@@ -93,7 +89,6 @@ export function SubscriptionsTable({ rows, plans, sort, dir, onSort, onRowClick,
     {
       key: "payment",
       header: "Payment method",
-      width: "13%",
       render: (row) => {
         const pm = row.institution.subscription.paymentMethod;
         return pm ? (
@@ -113,7 +108,6 @@ export function SubscriptionsTable({ rows, plans, sort, dir, onSort, onRowClick,
     {
       key: "actions",
       header: "Actions",
-      width: "7%",
       align: "center",
       render: (row) => <RowMoreMenu size="sm" label={`Actions for ${row.institution.name}`} items={getMenuItems(row)} />,
     },
@@ -127,8 +121,7 @@ export function SubscriptionsTable({ rows, plans, sort, dir, onSort, onRowClick,
         rowKey={(row) => row.id}
         onRowClick={onRowClick}
         verticalBorders
-        tableClassName="table-fixed"
-        containerClassName="border-0 rounded-none overflow-x-hidden"
+        containerClassName="border-0 rounded-none"
         headerClassName="bg-slate-50 border-b border-dash"
         thClassName="px-3.5 py-3 body-xsm-medium text-primary-400 font-semibold! normal-case"
         cellClassName="px-3.5 py-3"

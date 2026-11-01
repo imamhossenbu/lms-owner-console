@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Home, Undo2 } from "lucide-react";
+import { Undo2 } from "lucide-react";
 import type { ConsoleSettingsSection } from "@/validations/consoleSettingsSchema";
 import { fetchConsoleSettings } from "@/lib/consoleSettingsStorage";
 import { useUrlParams } from "@/lib/useUrlParams";
@@ -56,7 +56,7 @@ export function ConsoleSettingsView() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="space-y-5 pb-8 text-left">
       <div>
-        <Breadcrumb showHome={false} items={[{ label: "Console", href: "/", icon: <Home className="h-4 w-4" /> }, { label: "Settings" }]} className="mb-1.5" />
+        <Breadcrumb items={[{ label: "Settings" }]} className="mb-1.5" />
         <h1 className="heading-h3 text-primary-500 tracking-tight">Console settings</h1>
         <p className="mt-1 body-sm-regular text-primary-400">Company details, subscription billing, trial rules and lifecycle emails.</p>
       </div>

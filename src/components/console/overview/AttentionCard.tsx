@@ -4,11 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, ArrowRightLeft, CalendarPlus, CheckCircle2, Globe, RefreshCcw } from "lucide-react";
+import { ArrowRightLeft, CalendarPlus, CheckCircle2, Globe, RefreshCcw } from "lucide-react";
 import type { SaasInvoice } from "@/types/saas";
 import type { AttentionItem, AttentionKind } from "@/lib/saasStats";
 import type { Tone } from "@/components/ui/ToneBadge";
-import { IconSectionCard } from "@/components/ui/IconSectionCard";
+import { DashboardCard } from "../shared/DashboardCard";
 import { ToneBadge } from "@/components/ui/ToneBadge";
 import { CardActionButton } from "@/components/ui/CardActionButton";
 import { InstitutionAvatar } from "../shared/InstitutionAvatar";
@@ -71,9 +71,7 @@ export function AttentionCard({ items, invoices, open, actions }: AttentionCardP
   };
 
   return (
-    <IconSectionCard
-      icon={<AlertTriangle className="h-5 w-5" />}
-      tone="yellow"
+    <DashboardCard
       title="Needs attention"
       description={items.length ? `${items.length} item${items.length === 1 ? "" : "s"} to follow up` : "Everything looks healthy"}
       action={
@@ -123,7 +121,7 @@ export function AttentionCard({ items, invoices, open, actions }: AttentionCardP
           ))}
         </ul>
       )}
-    </IconSectionCard>
+    </DashboardCard>
   );
 }
 

@@ -9,46 +9,47 @@ export function ConsoleHeaderSkeleton({ actions = 1 }: { actions?: number }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-2.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Skeleton className="h-4 w-4 rounded" />
-          <Skeleton className="h-3.5 w-16" />
           <Skeleton className="h-3.5 w-3.5 rounded" />
           <Skeleton className="h-3.5 w-24" />
         </div>
-        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-8 w-56" />
         <Skeleton className="h-3.5 w-80 max-w-full" />
       </div>
-      <div className="flex gap-2.5">
+      <div className="flex gap-3">
         {Array.from({ length: actions }, (_, i) => (
-          <Skeleton key={i} className={cn("h-10 rounded-lg", i === actions - 1 ? "w-36" : "w-28")} />
+          <Skeleton key={i} className={cn("h-11 rounded-xl", i === actions - 1 ? "w-36" : "w-28")} />
         ))}
       </div>
     </div>
   );
 }
 
-/** KPI tile: icon tile, label, value, change chip + caption. */
+/** Overview stat card: icon tile + value/label, change + caption, sparkline (panel dashboard StatCard). */
 export function KpiTileSkeleton() {
   return (
-    <div className="dashboard-card shadow-2xs p-4">
-      <div className="flex items-center gap-2.5">
-        <Skeleton className="h-9 w-9 rounded-lg" />
-        <Skeleton className="h-3.5 w-24" />
+    <div className="rounded-xl border border-dash bg-white px-4 py-3.5 shadow-xs">
+      <div className="flex items-start gap-3.5">
+        <Skeleton className="h-10 w-10 rounded-lg" />
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-3 w-28" />
+        </div>
       </div>
-      <Skeleton className="mt-4 h-7 w-28" />
-      <div className="mt-3 flex items-center gap-2">
-        <Skeleton className="h-5 w-14 rounded-full" />
-        <Skeleton className="h-3 w-20" />
+      <div className="mt-3.5 flex items-end justify-between">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-6 w-20 rounded-md" />
       </div>
     </div>
   );
 }
 
 /** Card header: icon tile + title + description (+ optional control on the right). */
-export function CardHeaderSkeleton({ control = false }: { control?: boolean }) {
+export function CardHeaderSkeleton({ control = false, icon = true }: { control?: boolean; icon?: boolean }) {
   return (
     <div className="flex items-center gap-3.5">
-      <Skeleton className="h-11 w-11 rounded-xl" />
+      {icon && <Skeleton className="h-11 w-11 rounded-xl" />}
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-3 w-56 max-w-full" />
@@ -61,10 +62,10 @@ export function CardHeaderSkeleton({ control = false }: { control?: boolean }) {
 const BAR_HEIGHTS = ["h-10", "h-12", "h-14", "h-14", "h-20", "h-24", "h-28", "h-32", "h-36", "h-36", "h-40", "h-44", "h-44", "h-48"];
 
 /** Area / bar chart card: header, y-axis ticks and rising columns. */
-export function ChartCardSkeleton({ bars = 14, className }: { bars?: number; className?: string }) {
+export function ChartCardSkeleton({ bars = 14, className, icon = true }: { bars?: number; className?: string; icon?: boolean }) {
   return (
     <div className={cn("dashboard-card shadow-2xs p-5", className)}>
-      <CardHeaderSkeleton control />
+      <CardHeaderSkeleton control icon={icon} />
       <div className="mt-6 flex h-56 items-end gap-3">
         <div className="flex h-full flex-col justify-between pb-6">
           {[0, 1, 2, 3, 4].map((i) => (
@@ -89,11 +90,11 @@ export function ChartCardSkeleton({ bars = 14, className }: { bars?: number; cla
 }
 
 /** Donut card: ring with centre metric and legend pills. */
-export function DonutCardSkeleton({ legend = 4 }: { legend?: number }) {
+export function DonutCardSkeleton({ legend = 4, icon = true }: { legend?: number; icon?: boolean }) {
   return (
     <div className="dashboard-card shadow-2xs p-5">
-      <CardHeaderSkeleton />
-      <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
+      <CardHeaderSkeleton icon={icon} />
+      <div className="mt-6 flex flex-col items-center gap-6">
         <div className="relative flex h-40 w-40 shrink-0 items-center justify-center rounded-full border-18 border-slate-100">
           <div className="space-y-1.5 text-center">
             <Skeleton className="mx-auto h-6 w-10" />

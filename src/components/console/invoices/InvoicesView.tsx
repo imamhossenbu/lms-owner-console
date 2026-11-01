@@ -94,7 +94,7 @@ export function InvoicesView() {
         title="Invoices"
         subtitle="Subscription invoices issued to institutions — collect, retry, refund and download."
         actions={
-          <SecondaryButton type="button" leftIcon={<FileDown className="h-4 w-4" />} onClick={exportCsv} disabled={!filtered.length}>
+          <SecondaryButton size="lg" type="button" leftIcon={<FileDown className="h-4 w-4" />} onClick={exportCsv} disabled={!filtered.length}>
             Export CSV
           </SecondaryButton>
         }

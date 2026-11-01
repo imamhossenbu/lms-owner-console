@@ -7,7 +7,7 @@ import { SubscriptionStatusBadge } from "@/components/console/shared/ConsoleBadg
 export function SubStatusBadge({ status, cancelling }: { status: SubscriptionStatus; cancelling?: boolean }) {
   if (status === "ACTIVE" && cancelling)
     return (
-      <ToneBadge tone="yellow" size="sm" variant="pill" dot>
+      <ToneBadge tone="yellow" size="md">
         Cancelling
       </ToneBadge>
     );
@@ -16,7 +16,7 @@ export function SubStatusBadge({ status, cancelling }: { status: SubscriptionSta
 
 export function CycleBadge({ cycle }: { cycle: BillingCycle }) {
   return (
-    <ToneBadge tone={cycle === "YEARLY" ? "green" : "gray"} size="sm">
+    <ToneBadge tone={cycle === "YEARLY" ? "green" : "gray"} size="md">
       {cycle === "YEARLY" ? "Yearly" : "Monthly"}
     </ToneBadge>
   );
@@ -27,7 +27,7 @@ export function DaysLeftBadge({ days }: { days: number }) {
   const tone: Tone = days <= 3 ? "red" : days <= 7 ? "yellow" : "gray";
   const label = days < 0 ? `${-days}d overdue` : days === 0 ? "Today" : `${days}d left`;
   return (
-    <ToneBadge tone={tone} size="sm" variant="pill">
+    <ToneBadge tone={tone} size="md">
       {label}
     </ToneBadge>
   );

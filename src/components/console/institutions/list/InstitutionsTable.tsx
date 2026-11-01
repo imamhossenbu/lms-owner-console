@@ -22,10 +22,12 @@ export interface InstitutionsTableProps {
   open: InstitutionDialogOpeners;
   now: number;
   emptyMessage: React.ReactNode;
+  /** Rendered inside the table frame, under the rows (pagination). */
+  footer?: React.ReactNode;
 }
 
-/** Institutions DataTable (fixed layout, truncation with titles, vertical borders, sortable MRR / dates). */
-export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyMessage }: InstitutionsTableProps) {
+/** Institutions DataTable — same frame as the panel's OrdersTable (bordered box, column borders, pagination footer inside). */
+export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyMessage, footer }: InstitutionsTableProps) {
   const router = useRouter();
   const dir = (key: SortKey) => (sort.key === key ? sort.dir : null);
 
@@ -38,8 +40,8 @@ export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyM
       render: (i) => {
         const host = i.customDomain?.status === "VERIFIED" ? i.customDomain.domain : tenantHost(i.slug);
         return (
-          <div className="flex min-w-0 items-center gap-2.5">
-            <InstitutionAvatar initials={i.logoInitials} tone={i.tone} size="sm" />
+          <div className="flex min-w-56 items-center gap-3">
+            <InstitutionAvatar initials={i.logoInitials} tone={i.tone} size="md" />
             <div className="min-w-0">
               <p className="truncate body-sm-medium text-primary-500" title={i.name}>
                 {i.name}
@@ -55,24 +57,22 @@ export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyM
     {
       key: "plan",
       header: "Plan",
-      width: "130px",
       render: (i) => (
         <div className="flex min-w-0 flex-col items-start gap-1">
           <PlanBadge planId={i.subscription.planId} plans={plans} />
-          <span className="truncate body-2xsm-regular text-primary-300">{CYCLE_LABEL[i.subscription.cycle]}</span>
+          <span className="whitespace-nowrap body-xsm-regular text-primary-300">{CYCLE_LABEL[i.subscription.cycle]}</span>
         </div>
       ),
     },
     {
       key: "status",
       header: "Status",
-      width: "130px",
       render: (i) => {
         const left = trialDaysLeft(i, now);
         return (
           <div className="flex min-w-0 flex-col items-start gap-1">
             <SubscriptionStatusBadge subscription={i.subscription} />
-            {left !== null && <span className={left <= 3 ? "body-2xsm-regular text-red" : "body-2xsm-regular text-primary-300"}>{left <= 0 ? "Ends today" : `${left}d left`}</span>}
+            {left !== null && <span className={left <= 3 ? "whitespace-nowrap body-xsm-regular text-red" : "whitespace-nowrap body-xsm-regular text-primary-300"}>{left <= 0 ? "Ends today" : `${left}d left`}</span>}
           </div>
         );
       },
@@ -80,13 +80,15 @@ export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyM
     {
       key: "students",
       header: "Students",
-      width: "160px",
-      render: (i) => <UsageBar usage={i.usage.students} limit={plans.find((p) => p.id === i.subscription.planId)?.limits.students ?? null} limitKey="students" variant="compact" />,
+      render: (i) => (
+        <div className="min-w-40">
+          <UsageBar usage={i.usage.students} limit={plans.find((p) => p.id === i.subscription.planId)?.limits.students ?? null} limitKey="students" variant="compact" />
+        </div>
+      ),
     },
     {
       key: "mrr",
       header: "MRR",
-      width: "96px",
       align: "right",
       sortDirection: dir("mrr"),
       onHeaderClick: () => onSort("mrr"),
@@ -98,35 +100,34 @@ export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyM
     {
       key: "created",
       header: "Created",
-      width: "112px",
       sortDirection: dir("created"),
       onHeaderClick: () => onSort("created"),
       render: (i) => (
-        <span className="block truncate body-sm-regular text-primary-400" title={formatDate(i.createdAt)}>
-          {formatDate(i.createdAt)}
-        </span>
+        <div className="whitespace-nowrap">
+          <p className="body-sm-regular text-primary-500">{formatDate(i.createdAt)}</p>
+          <p className="body-xsm-regular text-primary-300">{relativeTime(i.createdAt, now)}</p>
+        </div>
       ),
     },
     {
       key: "active",
       header: "Last active",
-      width: "104px",
       sortDirection: dir("active"),
       onHeaderClick: () => onSort("active"),
       render: (i) => (
-        <span className="block truncate body-sm-regular text-primary-400" title={formatDate(i.lastActiveAt)}>
-          {relativeTime(i.lastActiveAt, now)}
-        </span>
+        <div className="whitespace-nowrap">
+          <p className="body-sm-regular text-primary-500">{relativeTime(i.lastActiveAt, now)}</p>
+          <p className="body-xsm-regular text-primary-300">{formatDate(i.lastActiveAt)}</p>
+        </div>
       ),
     },
     {
       key: "actions",
-      header: "",
-      width: "60px",
+      header: "Actions",
+      width: "76px",
       align: "center",
       render: (i) => (
         <RowMoreMenu
-          size="sm"
           label={`Actions for ${i.name}`}
           items={institutionMenuItems(i, open, { view: () => router.push(`/institutions/${i.id}`), edit: () => router.push(`/institutions/${i.id}/edit`) })}
         />
@@ -135,16 +136,21 @@ export function InstitutionsTable({ rows, plans, sort, onSort, open, now, emptyM
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      rowKey={(r) => r.id}
-      onRowClick={(r) => router.push(`/institutions/${r.id}`)}
-      emptyMessage={emptyMessage}
-      tableClassName="table-fixed"
-      minWidth="min-w-0"
-      className="rounded-none border-0"
-    />
+    <div className="overflow-hidden rounded-lg border border-dash">
+      <DataTable
+        columns={columns}
+        data={rows}
+        rowKey={(r) => r.id}
+        onRowClick={(r) => router.push(`/institutions/${r.id}`)}
+        verticalBorders
+        containerClassName="border-0 rounded-none"
+        headerClassName="bg-slate-50 border-b border-dash"
+        thClassName="px-3.5 py-3 body-xsm-medium text-primary-400 font-semibold! normal-case"
+        cellClassName="px-3.5 py-3"
+        emptyMessage={emptyMessage}
+      />
+      {footer}
+    </div>
   );
 }
 

@@ -9,7 +9,7 @@ export function SubscriptionsSkeleton() {
   return (
     <div className="space-y-5 pb-8 text-left animate-pulse" aria-busy="true" aria-label="Loading subscriptions">
       <ConsoleHeaderSkeleton actions={0} />
-      <KpiRowSkeleton count={6} className="xl:grid-cols-3 2xl:grid-cols-6" />
+      <KpiRowSkeleton count={6} className="xl:grid-cols-3" />
       <PillTabsSkeleton tabs={5} />
       <div className="space-y-4 rounded-xl border border-dash bg-white p-5">
         <FiltersSkeleton selects={2} />

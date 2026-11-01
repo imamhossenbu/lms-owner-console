@@ -12,6 +12,8 @@ interface AuthLeftPanelProps {
   features: AuthFeature[];
   mockupSrc: string;
   mockupAlt: string;
+  /** Line under the EduPro logo (default "LMS Admin Panel"). */
+  brandSubtitle?: string;
   topBadge?: React.ReactNode;
   footerTagline?: string;
 }
@@ -22,6 +24,7 @@ export function AuthLeftPanel({
   features,
   mockupSrc,
   mockupAlt,
+  brandSubtitle = "LMS Admin Panel",
   topBadge,
   footerTagline = "A modern LMS for a brighter future",
 }: AuthLeftPanelProps) {
@@ -48,7 +51,7 @@ export function AuthLeftPanel({
 
       {/* Top Brand Header Row */}
       <div className="relative z-10 flex items-center justify-between p-7 sm:p-10 lg:pl-12 xl:pl-14 lg:pr-8 xl:pr-10 lg:pt-12 xl:pt-14 pb-0">
-        <EduProLogo variant="light" size="md" subtitle="LMS Admin Panel" />
+        <EduProLogo variant="light" size="md" subtitle={brandSubtitle} />
         {topBadge}
       </div>
 

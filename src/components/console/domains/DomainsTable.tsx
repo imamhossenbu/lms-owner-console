@@ -24,39 +24,36 @@ interface DomainsTableProps {
 /** Custom domains DataTable — failing rows tinted red. */
 export function DomainsTable({ rows, verifying, onVerify, getMenuItems, footer }: DomainsTableProps) {
   const columns: ColumnDef<DomainRow>[] = [
-    { key: "institution", header: "Institution", width: "22%", render: (row) => <InstitutionCell institution={row.institution} /> },
+    { key: "institution", header: "Institution", render: (row) => <InstitutionCell institution={row.institution} /> },
     {
       key: "domain",
       header: "Domain",
-      width: "21%",
       render: (row) => (
         <div className="flex min-w-0 items-center gap-1.5">
           {row.domain.status === "FAILED" ? <AlertTriangle className="h-4 w-4 shrink-0 text-red" /> : row.domain.status === "VERIFIED" ? <ShieldCheck className="h-4 w-4 shrink-0 text-green" /> : null}
-          <span className={cn("truncate font-mono body-sm-medium", row.domain.status === "FAILED" ? "text-red" : "text-primary-500")} title={row.domain.domain}>
+          <span className={cn("whitespace-nowrap body-sm-medium", row.domain.status === "FAILED" ? "text-red" : "text-primary-500")} title={row.domain.domain}>
             {row.domain.domain}
           </span>
         </div>
       ),
     },
-    { key: "status", header: "Status", width: "11%", render: (row) => <DomainStatusBadge status={row.domain.status} /> },
+    { key: "status", header: "Status", render: (row) => <DomainStatusBadge status={row.domain.status} /> },
     {
       key: "target",
       header: "DNS target",
-      width: "15%",
       render: (row) => (
         <div className="flex min-w-0 items-center gap-1">
-          <span className="truncate font-mono body-xsm-regular text-primary-400" title={`CNAME → ${row.domain.dnsTarget}`}>
+          <span className="whitespace-nowrap body-xsm-regular text-primary-400" title={`CNAME → ${row.domain.dnsTarget}`}>
             {row.domain.dnsTarget}
           </span>
           <CopyButton value={row.domain.dnsTarget} label="CNAME target copied" />
         </div>
       ),
     },
-    { key: "added", header: "Added", width: "10%", render: (row) => <span className="block truncate body-sm-regular text-primary-500">{formatDate(row.domain.addedAt)}</span> },
+    { key: "added", header: "Added", render: (row) => <span className="block truncate body-sm-regular text-primary-500">{formatDate(row.domain.addedAt)}</span> },
     {
       key: "verified",
       header: "Verified",
-      width: "12%",
       render: (row) =>
         row.domain.verifiedAt ? (
           <span className="block truncate body-sm-regular text-primary-500">{formatDate(row.domain.verifiedAt)}</span>
@@ -72,7 +69,6 @@ export function DomainsTable({ rows, verifying, onVerify, getMenuItems, footer }
     {
       key: "actions",
       header: "Actions",
-      width: "9%",
       align: "center",
       render: (row) => <RowMoreMenu size="sm" label={`Actions for ${row.domain.domain}`} items={getMenuItems(row)} />,
     },
@@ -85,8 +81,7 @@ export function DomainsTable({ rows, verifying, onVerify, getMenuItems, footer }
         data={rows}
         rowKey={(row) => row.id}
         verticalBorders
-        tableClassName="table-fixed"
-        containerClassName="border-0 rounded-none overflow-x-hidden"
+        containerClassName="border-0 rounded-none"
         headerClassName="bg-slate-50 border-b border-dash"
         thClassName="px-3.5 py-3 body-xsm-medium text-primary-400 font-semibold! normal-case"
         cellClassName="px-3.5 py-3"

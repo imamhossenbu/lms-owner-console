@@ -2,8 +2,7 @@
 
 import React from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { LineChart as LineChartIcon } from "lucide-react";
-import { IconSectionCard } from "@/components/ui/IconSectionCard";
+import { DashboardCard } from "../shared/DashboardCard";
 import { ToneBadge } from "@/components/ui/ToneBadge";
 import { AXIS_TICK, CHART } from "@/components/ui/charts/chartTheme";
 import { ChartTooltip } from "@/components/ui/charts/ChartTooltip";
@@ -12,16 +11,15 @@ import type { SeriesPoint } from "@/lib/saasStats";
 import { formatCompactMoney, formatMoney, pctChange } from "@/lib/saasStats";
 
 /** MRR month-end area chart (14 months) with the growth over the window. */
-export function MrrChartCard({ series }: { series: SeriesPoint[] }) {
+export function MrrChartCard({ series, className }: { series: SeriesPoint[]; className?: string }) {
   const first = series[0]?.value ?? 0;
   const last = series[series.length - 1]?.value ?? 0;
   const growth = pctChange(last, first);
   const hasData = series.some((p) => p.value > 0);
 
   return (
-    <IconSectionCard
-      icon={<LineChartIcon className="h-5 w-5" />}
-      tone="orange"
+    <DashboardCard
+      className={className}
       title="MRR growth"
       description={`Monthly recurring revenue · last ${series.length} months`}
       action={
@@ -36,7 +34,7 @@ export function MrrChartCard({ series }: { series: SeriesPoint[] }) {
       {!hasData ? (
         <ChartEmpty title="No revenue yet" message="MRR appears once the first institution pays." />
       ) : (
-        <div className="h-64 w-full">
+        <div className="h-full min-h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
               <defs>
@@ -74,7 +72,7 @@ export function MrrChartCard({ series }: { series: SeriesPoint[] }) {
           </ResponsiveContainer>
         </div>
       )}
-    </IconSectionCard>
+    </DashboardCard>
   );
 }
 

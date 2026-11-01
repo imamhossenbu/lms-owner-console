@@ -7,6 +7,8 @@ interface AuthRightPanelProps {
   children: React.ReactNode;
   copyrightText?: string | null;
   topRightAction?: React.ReactNode;
+  /** Line under the EduPro logo (default "LMS Admin Panel"; the Owner Console passes "Owner Console"). */
+  brandSubtitle?: string;
 }
 
 export function AuthRightPanel({
@@ -15,6 +17,7 @@ export function AuthRightPanel({
   children,
   copyrightText = null,
   topRightAction = null,
+  brandSubtitle = "LMS Admin Panel",
 }: AuthRightPanelProps) {
   return (
     <div className="w-full lg:w-[46%] xl:w-[45%] bg-white p-7 sm:p-10 lg:p-12 xl:p-16 flex flex-col justify-center relative overflow-y-auto">
@@ -31,7 +34,7 @@ export function AuthRightPanel({
           <EduProLogo
             variant="orange"
             size="lg"
-            subtitle="LMS Admin Panel"
+            subtitle={brandSubtitle}
             className="mb-5 sm:mb-6"
           />
 

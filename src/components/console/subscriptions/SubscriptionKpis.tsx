@@ -10,7 +10,7 @@ export function SubscriptionKpis({ store }: { store: SaasStore }) {
   const renewalValue = renewals.reduce((s, r) => s + r.amount, 0);
   const pastDue = store.institutions.filter((i) => i.subscription.status === "PAST_DUE").length;
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <TrendStatCard icon={<CircleDollarSign />} iconClassName="bg-green-bg text-green" label="MRR" value={formatCompactMoney(mrr(store))} />
       <TrendStatCard icon={<TrendingUp />} iconClassName="bg-blue-14 text-blue" label="ARR" value={formatCompactMoney(arr(store))} />
       <TrendStatCard icon={<Users />} iconClassName="bg-purple-14 text-purple" label="Active" value={activeCount(store).toLocaleString()} />

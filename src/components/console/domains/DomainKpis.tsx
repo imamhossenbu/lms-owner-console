@@ -7,7 +7,7 @@ import type { DomainRow } from "./domainUtils";
 export function DomainKpis({ rows, subdomains }: { rows: DomainRow[]; subdomains: number }) {
   const count = (s: string) => rows.filter((r) => r.domain.status === s).length;
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
       <TrendStatCard icon={<Link2 />} iconClassName="bg-gray-bg text-primary-400" label="Default subdomains" value={subdomains.toLocaleString()} />
       <TrendStatCard icon={<Globe />} iconClassName="bg-blue-14 text-blue" label="Custom domains" value={rows.length.toLocaleString()} />
       <TrendStatCard icon={<ShieldCheck />} iconClassName="bg-green-bg text-green" label="Verified" value={count("VERIFIED").toLocaleString()} />

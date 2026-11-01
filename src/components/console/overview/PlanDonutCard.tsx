@@ -3,9 +3,8 @@
 import React from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { motion } from "framer-motion";
-import { PieChart as PieIcon } from "lucide-react";
 import type { PlanId } from "@/types/saas";
-import { IconSectionCard } from "@/components/ui/IconSectionCard";
+import { DashboardCard } from "../shared/DashboardCard";
 import { CHART } from "@/components/ui/charts/chartTheme";
 import { ChartTooltip } from "@/components/ui/charts/ChartTooltip";
 import { ChartEmpty } from "@/components/ui/charts/ChartEmpty";
@@ -27,7 +26,7 @@ export function PlanDonutCard({ distribution, revenue }: { distribution: ReturnT
   const total = distribution.reduce((s, d) => s + d.count, 0);
   const slices = distribution.filter((d) => d.count > 0);
   return (
-    <IconSectionCard icon={<PieIcon className="h-5 w-5" />} tone="purple" title="Plan distribution" description="Live institutions (incl. trials) per plan">
+    <DashboardCard title="Plan distribution" description="Live institutions (incl. trials) per plan">
       {total === 0 ? (
         <ChartEmpty title="No institutions yet" message="Plans appear once institutions subscribe." />
       ) : (
@@ -82,7 +81,7 @@ export function PlanDonutCard({ distribution, revenue }: { distribution: ReturnT
           </ul>
         </div>
       )}
-    </IconSectionCard>
+    </DashboardCard>
   );
 }
 

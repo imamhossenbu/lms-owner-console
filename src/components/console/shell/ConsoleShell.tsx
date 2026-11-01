@@ -9,8 +9,8 @@ import { useConsoleSession } from "./consoleSession";
 const isConsoleLogin = (pathname: string | null) => pathname === "/login";
 
 /**
- * Owner Console frame (navy sidebar + navbar). Separate from the institution AdminShell, which skips /console/**.
- * /console/login renders bare. Without a console session the owner is sent to /console/login.
+ * Owner Console frame — same geometry as the panel's AdminShell (white sidebar + navbar, p-3 main).
+ * /login renders bare. Without a console session the owner is sent to /login.
  */
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,7 +30,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
       <ConsoleSidebar />
       <div className="flex min-w-0 flex-1 flex-col bg-gray-bg">
         <ConsoleNavbar session={session} />
-        <main className="mx-auto w-full max-w-400 flex-1 p-3 lg:p-5">{children}</main>
+        <main className="p-3 flex-1 max-w-400 w-full mx-auto">{children}</main>
       </div>
     </div>
   );

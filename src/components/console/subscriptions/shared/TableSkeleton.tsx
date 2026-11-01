@@ -11,7 +11,7 @@ function Cell({ kind }: { kind: SkeletonCell }) {
     case "institution":
       return (
         <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-slate-200" />
+          <div className="h-10 w-10 shrink-0 rounded-lg bg-slate-200" />
           <div className="flex-1 space-y-1.5">
             <Bar className="h-3.5 w-28" />
             <Soft className="h-3 w-24" />
@@ -26,13 +26,13 @@ function Cell({ kind }: { kind: SkeletonCell }) {
         </div>
       );
     case "badge":
-      return <Soft className="h-5.5 w-16 rounded-md" />;
+      return <Soft className="h-6 w-20 rounded-md" />;
     case "money":
       return <Bar className="h-3.5 w-14" />;
     case "mono":
       return <Bar className="h-3.5 w-24" />;
     case "menu":
-      return <div className="mx-auto h-7 w-7 rounded-lg border border-dash" />;
+      return <div className="mx-auto h-9 w-9 rounded-lg border border-dash" />;
     default:
       return <Soft className="h-3.5 w-20" />;
   }

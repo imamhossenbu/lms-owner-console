@@ -25,7 +25,6 @@ import { UsageTab } from "./usage/UsageTab";
 import { BillingTab } from "./billing/BillingTab";
 import { DomainTab } from "./domain/DomainTab";
 import { ActivityTab } from "./activity/ActivityTab";
-import { Home } from "lucide-react";
 
 const TAB_ICON: Record<DetailTab, React.ReactNode> = {
   overview: <LayoutGrid />,
@@ -75,10 +74,7 @@ export function InstitutionDetailView({ institutionId }: { institutionId: string
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="space-y-5 pb-8 text-left">
-      <Breadcrumb
-        showHome={false}
-        items={[{ label: "Console", href: "/", icon: <Home className="h-4 w-4" /> }, { label: "Institutions", href: "/institutions" }, { label: inst.name }]}
-      />
+      <Breadcrumb items={[{ label: "Institutions", href: "/institutions" }, { label: inst.name }]} />
       <DetailHeader institution={inst} plans={store.plans} open={open} trialLeft={trialDaysLeft(inst, now)} />
 
       <PillTabs<DetailTab> ariaLabel="Institution sections" idPrefix="inst" tabs={tabs} activeId={tab} onChange={(next) => set({ tab: next === "overview" ? null : next, events: null })} />

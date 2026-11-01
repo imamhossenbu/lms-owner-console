@@ -330,6 +330,41 @@ export function overviewKpis(store: SaasStore, now = Date.now()) {
   };
 }
 
+/** Month-end history of every Overview KPI (oldest → newest) — feeds the stat-card sparklines. */
+export function kpiSparks(store: SaasStore, months = 8, now = Date.now()) {
+  const points = Array.from({ length: months }, (_, idx) => {
+    const offset = months - 1 - idx;
+    const end = offset === 0 ? now : monthEnd(now, offset);
+    const m = offset === 0 ? mrr(store) : mrrAt(store, end);
+    const paying = store.institutions.filter((i) => wasPayingAt(i, end)).length;
+    const trials = store.institutions.filter((i) => i.subscription.trialEndsAt && t(i.createdAt) <= end && t(i.subscription.trialEndsAt) > end).length;
+    const failed = store.invoices
+      .filter((i) => (i.status === "FAILED" || i.status === "OPEN") && t(i.issuedAt) <= end && t(i.issuedAt) > end - 30 * DAY)
+      .reduce((s, i) => s + i.total, 0);
+    return {
+      mrr: m,
+      arr: m * 12,
+      active: paying,
+      trials,
+      conversion: trialConversionRate(store, 180, end),
+      churn: churnRate(store, 30, end),
+      arpa: paying ? m / paying : 0,
+      failed,
+    };
+  });
+  const pick = (k: keyof (typeof points)[number]) => points.map((p) => p[k]);
+  return {
+    mrr: pick("mrr"),
+    arr: pick("arr"),
+    active: pick("active"),
+    trials: pick("trials"),
+    conversion: pick("conversion"),
+    churn: pick("churn"),
+    arpa: pick("arpa"),
+    failed: pick("failed"),
+  };
+}
+
 /** Percentage change between two values (null when the previous value is 0). */
 export const pctChange = (value: number, previous: number) => (previous ? ((value - previous) / Math.abs(previous)) * 100 : null);
 
