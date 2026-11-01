@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useViewportFit } from "@/lib/useViewportFit";
 import PrimaryButton from "@/components/ui/primary-button";
 import SecondaryButton from "@/components/ui/secondary-button";
 import { RangeMonth } from "./RangeMonth";
@@ -39,8 +40,8 @@ export interface DateRangePickerProps {
 }
 
 /**
- * App-wide date range picker. Quick-select presets (computed from today) on the left, two months
- * side by side (one on mobile) with a continuous range band and live hover preview, keyboard support
+ * App-wide date range picker. Quick-select presets (computed from today) on the left, one month
+ * (arrows to page) with a continuous range band and live hover preview, keyboard support
  * (arrows, PgUp/PgDn, Home/End, Enter, Esc), a summary line with the day count, and Clear / Cancel / Apply.
  * Nothing is committed until Apply (presets apply instantly).
  */
@@ -64,6 +65,8 @@ export function DateRangePicker({
   const [focusKey, setFocusKey] = useState(() => value.to ?? toKey(new Date()));
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // Never spill past the screen edge (e.g. a filter bar's right-hand date button).
+  useViewportFit(open, panelRef);
 
   const label = formatDateRange(value);
   const todayKey = toKey(today);
@@ -74,8 +77,8 @@ export function DateRangePicker({
     setToday(now);
     setDraft(value);
     setHoverKey(undefined);
-    // Show the range ending in the right-hand month.
-    setViewMonth(startOfMonth(addMonths(anchor, -1)));
+    // Open on the month the current range ends in.
+    setViewMonth(startOfMonth(anchor));
     setFocusKey(toKey(anchor));
     setOpen(true);
   }, [value]);
@@ -110,9 +113,9 @@ export function DateRangePicker({
     setOpen(false);
   };
 
-  const months = useMemo(() => [viewMonth, addMonths(viewMonth, 1)], [viewMonth]);
+  const months = useMemo(() => [viewMonth], [viewMonth]);
 
-  /** Arrow-key navigation across both months (scrolls the view when leaving it). */
+  /** Arrow-key navigation (pages the month when focus leaves it). */
   const onDayKey = (e: React.KeyboardEvent<HTMLButtonElement>, key: string) => {
     const d = fromKey(key);
     const moves: Record<string, Date> = {
@@ -129,8 +132,7 @@ export function DateRangePicker({
     if (!next) return;
     e.preventDefault();
     const nextKey = toKey(next);
-    if (next < months[0]) setViewMonth(startOfMonth(next));
-    if (next >= addMonths(months[1], 1)) setViewMonth(startOfMonth(addMonths(next, -1)));
+    if (next < months[0]! || next >= addMonths(months[0]!, 1)) setViewMonth(startOfMonth(next));
     setFocusKey(nextKey);
     if (draft.from && !draft.to) setHoverKey(nextKey);
     requestAnimationFrame(() => panelRef.current?.querySelector<HTMLButtonElement>(`[data-day="${nextKey}"]`)?.focus());
@@ -204,7 +206,7 @@ export function DateRangePicker({
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
             className={cn(
-              "absolute top-full z-50 mt-2 w-80 sm:w-140 md:w-180 rounded-2xl border border-dash bg-white p-4 shadow-xl",
+              "absolute top-full z-50 mt-2 w-80 sm:w-120 rounded-2xl border border-dash bg-white p-4 shadow-xl",
               align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left"
             )}
           >
@@ -214,7 +216,7 @@ export function DateRangePicker({
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="relative grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="relative">
                   <button
                     type="button"
                     aria-label="Previous month"
@@ -231,8 +233,8 @@ export function DateRangePicker({
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
-                  {months.map((m, i) => (
-                    <div key={m.toISOString()} className={cn(i === 1 && "hidden md:block")}>
+                  {months.map((m) => (
+                    <div key={m.toISOString()}>
                       <RangeMonth
                         month={m}
                         from={draft.from}

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useId } from "react";
 import { ChevronDown, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/cn";
+import { useViewportFit } from "@/lib/useViewportFit";
 
 export interface DropdownSelectOption {
   value: string;
@@ -50,6 +51,8 @@ export function DropdownSelect({
 }: DropdownSelectProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useViewportFit(open, panelRef);
   const id = useId();
 
   // Normalize options to DropdownSelectOption[]
@@ -136,6 +139,7 @@ export function DropdownSelect({
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={panelRef}
             role="listbox"
             initial={{ opacity: 0, y: isUp ? 6 : -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

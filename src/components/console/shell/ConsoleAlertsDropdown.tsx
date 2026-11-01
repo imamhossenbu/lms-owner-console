@@ -11,6 +11,7 @@ import { attentionItems } from "@/lib/saasStats";
 import { useSaasStore } from "@/lib/planAccess";
 import { ToneBadge } from "@/components/ui/ToneBadge";
 import { cn } from "@/lib/cn";
+import { useViewportFit } from "@/lib/useViewportFit";
 import { useNow } from "../shared/useNow";
 import { ATTENTION_KIND } from "../shared/attentionMeta";
 import { markAlertsSeen, useSeenAlerts } from "./consoleAlertsSeen";
@@ -26,6 +27,8 @@ export function ConsoleAlertsDropdown() {
   const seen = useSeenAlerts();
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const fitRef = useRef<HTMLDivElement>(null);
+  useViewportFit(isOpen, fitRef);
 
   const items = useMemo(() => (now && store.institutions.length ? attentionItems(store, now) : []), [store, now]);
   const unread = items.filter((i) => !seen.includes(i.id));
@@ -92,6 +95,7 @@ export function ConsoleAlertsDropdown() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={fitRef}
             initial={{ opacity: 0, scale: 0.96, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -6 }}

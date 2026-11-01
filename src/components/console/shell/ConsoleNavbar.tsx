@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useViewportFit } from "@/lib/useViewportFit";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ExternalLink, LogOut, Menu, Settings, Shield } from "lucide-react";
@@ -20,6 +21,8 @@ export function ConsoleNavbar({ session }: { session: ConsoleSession | null | un
   const owner = session ?? { ...CONSOLE_OWNER, signedInAt: "" };
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const fitRef = useRef<HTMLDivElement>(null);
+  useViewportFit(menuOpen, fitRef);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -98,6 +101,7 @@ export function ConsoleNavbar({ session }: { session: ConsoleSession | null | un
           <AnimatePresence>
             {menuOpen && (
               <motion.div
+                ref={fitRef}
                 role="menu"
                 initial={{ opacity: 0, scale: 0.96, y: -6 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
