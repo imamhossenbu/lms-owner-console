@@ -47,3 +47,9 @@ export function markAlertsSeen(ids: string[]) {
   localStorage.setItem(KEY, JSON.stringify(next));
   window.dispatchEvent(new Event(EVENT));
 }
+
+export function markAlertsUnseen(ids: string[]) {
+  const drop = new Set(ids);
+  localStorage.setItem(KEY, JSON.stringify(read().filter((id) => !drop.has(id))));
+  window.dispatchEvent(new Event(EVENT));
+}

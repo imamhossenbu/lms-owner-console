@@ -30,8 +30,11 @@ const t = (iso: string) => new Date(iso).getTime();
 
 // ---------------------------------------------------------------- formatting
 
-export const formatMoney = (n: number, opts: { cents?: boolean } = {}) =>
-  `$${n.toLocaleString("en-US", { minimumFractionDigits: opts.cents ? 2 : 0, maximumFractionDigits: opts.cents ? 2 : n % 1 ? 2 : 0 })}`;
+/** "$79" for whole dollars, "$94.80" when there are cents (or `cents: true`). */
+export const formatMoney = (n: number, opts: { cents?: boolean } = {}) => {
+  const digits = opts.cents || Math.round(n * 100) % 100 !== 0 ? 2 : 0;
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+};
 
 export const formatCompactMoney = (n: number) => {
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
@@ -139,6 +142,144 @@ export function mrrAt(store: SaasStore, at: number) {
   let sum = 0;
   latest.forEach((inv) => (sum += invoiceMonthlyValue(store, inv)));
   return round2(sum);
+}
+
+/** Per-institution MRR at a moment (same rules as `mrrAt`): institutionId → monthly value. */
+export function mrrBreakdownAt(store: SaasStore, at: number): Map<string, number> {
+  const latest = new Map<string, SaasInvoice>();
+  const stoppedAt = new Map<string, number>();
+  store.institutions.forEach((i) => {
+    const s = i.subscription;
+    const stop = s.status === "SUSPENDED" ? s.suspendedAt : s.status === "CANCELLED" ? s.cancelledAt : null;
+    if (stop) stoppedAt.set(i.id, t(stop));
+  });
+  for (const inv of store.invoices) {
+    if (inv.status === "VOID" || inv.status === "REFUNDED") continue;
+    const stop = stoppedAt.get(inv.institutionId);
+    if (stop !== undefined && at >= stop) continue;
+    if (t(inv.periodStart) > at || t(inv.periodEnd) <= at) continue;
+    const prev = latest.get(inv.institutionId);
+    if (!prev || inv.issuedAt > prev.issuedAt) latest.set(inv.institutionId, inv);
+  }
+  const out = new Map<string, number>();
+  latest.forEach((inv, id) => out.set(id, invoiceMonthlyValue(store, inv)));
+  return out;
+}
+
+/** Live per-institution MRR (paying institutions at today's price) — sums to `mrr(store)`. */
+export function liveMrrBreakdown(store: Pick<SaasStore, "plans" | "institutions">): Map<string, number> {
+  const out = new Map<string, number>();
+  store.institutions.forEach((i) => {
+    if (!isPaying(i)) return;
+    const v = monthlyValue(store.plans, i);
+    if (v > 0) out.set(i.id, v);
+  });
+  return out;
+}
+
+export interface MrrMovementRow {
+  key: string;
+  label: string;
+  fullLabel: string;
+  starting: number;
+  newMrr: number;
+  expansion: number;
+  /** Negative or 0. */
+  contraction: number;
+  /** Negative or 0. */
+  churned: number;
+  net: number;
+  ending: number;
+  newCount: number;
+  expansionCount: number;
+  contractionCount: number;
+  churnedCount: number;
+}
+
+/**
+ * Month-by-month MRR movement (oldest → newest), comparing each institution's MRR at the previous month end with
+ * this month end: 0 → x = new, x → 0 = churned, up = expansion, down = contraction. The current month ends "now".
+ */
+export function mrrMovement(store: SaasStore, months = 12, now = Date.now()): MrrMovementRow[] {
+  const at = (offset: number) => (offset === 0 ? liveMrrBreakdown(store) : mrrBreakdownAt(store, monthEnd(now, offset)));
+  let prev = at(months);
+  return Array.from({ length: months }, (_, idx) => {
+    const offset = months - 1 - idx;
+    const cur = at(offset);
+    const row: MrrMovementRow = {
+      key: monthKey(monthStart(now, offset)),
+      label: monthLabel(monthStart(now, offset)),
+      fullLabel: monthLabel(monthStart(now, offset), true),
+      starting: 0,
+      newMrr: 0,
+      expansion: 0,
+      contraction: 0,
+      churned: 0,
+      net: 0,
+      ending: 0,
+      newCount: 0,
+      expansionCount: 0,
+      contractionCount: 0,
+      churnedCount: 0,
+    };
+    new Set([...prev.keys(), ...cur.keys()]).forEach((id) => {
+      const a = prev.get(id) ?? 0;
+      const b = cur.get(id) ?? 0;
+      row.starting += a;
+      row.ending += b;
+      if (Math.abs(b - a) < 0.005) return;
+      if (a === 0) {
+        row.newMrr += b;
+        row.newCount++;
+      } else if (b === 0) {
+        row.churned -= a;
+        row.churnedCount++;
+      } else if (b > a) {
+        row.expansion += b - a;
+        row.expansionCount++;
+      } else {
+        row.contraction -= a - b;
+        row.contractionCount++;
+      }
+    });
+    (["starting", "ending", "newMrr", "expansion", "contraction", "churned"] as const).forEach((k) => (row[k] = round2(row[k])));
+    row.net = round2(row.ending - row.starting);
+    prev = cur;
+    return row;
+  });
+}
+
+export interface CollectionsRow {
+  key: string;
+  label: string;
+  fullLabel: string;
+  /** Cash received (paid invoices by paid date, incl. later-refunded ones). */
+  collected: number;
+  /** Still unpaid (FAILED / OPEN) invoices issued in the month. */
+  outstanding: number;
+  /** Refunded invoices issued in the month. */
+  refunded: number;
+  invoices: number;
+}
+
+/** Cash collected vs unpaid vs refunded per month (oldest → newest). */
+export function collectionsSeries(store: Pick<SaasStore, "invoices">, months = 12, now = Date.now()): CollectionsRow[] {
+  return Array.from({ length: months }, (_, idx) => {
+    const offset = months - 1 - idx;
+    const start = monthStart(now, offset);
+    const end = monthEnd(now, offset);
+    const inMonth = (iso: string | null) => !!iso && t(iso) >= start && t(iso) <= end;
+    const issued = store.invoices.filter((i) => inMonth(i.issuedAt) && i.status !== "VOID");
+    return {
+      key: monthKey(start),
+      label: monthLabel(start),
+      fullLabel: monthLabel(start, true),
+      collected: round2(store.invoices.filter((i) => (i.status === "PAID" || i.status === "REFUNDED") && inMonth(i.paidAt)).reduce((s, i) => s + i.total, 0)),
+      outstanding: round2(issued.filter((i) => i.status === "FAILED" || i.status === "OPEN").reduce((s, i) => s + i.total, 0)),
+      refunded: round2(issued.filter((i) => i.status === "REFUNDED").reduce((s, i) => s + i.total, 0)),
+      invoices: issued.length,
+    };
+  });
 }
 
 export interface SeriesPoint {

@@ -4,26 +4,21 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Bell, BellOff, CheckCheck, Gauge, Globe, Hourglass } from "lucide-react";
+import { Bell, BellOff, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
-import type { AttentionItem, AttentionKind } from "@/lib/saasStats";
+import type { AttentionItem } from "@/lib/saasStats";
 import { attentionItems } from "@/lib/saasStats";
 import { useSaasStore } from "@/lib/planAccess";
 import { ToneBadge } from "@/components/ui/ToneBadge";
 import { cn } from "@/lib/cn";
 import { useNow } from "../shared/useNow";
+import { ATTENTION_KIND } from "../shared/attentionMeta";
 import { markAlertsSeen, useSeenAlerts } from "./consoleAlertsSeen";
 
 const LATEST_COUNT = 6;
 
-const KIND: Record<AttentionKind, { icon: React.ComponentType<{ className?: string }>; className: string; href: (i: AttentionItem) => string }> = {
-  PAST_DUE: { icon: AlertTriangle, className: "bg-yellow-bg text-yellow", href: (i) => `/institutions/${i.institution.id}?tab=billing` },
-  TRIAL_ENDING: { icon: Hourglass, className: "bg-blue-14 text-blue", href: (i) => `/institutions/${i.institution.id}` },
-  NEAR_LIMIT: { icon: Gauge, className: "bg-brand-orange-light text-brand-orange", href: (i) => `/institutions/${i.institution.id}?tab=usage` },
-  DOMAIN_FAILED: { icon: Globe, className: "bg-red-14 text-red", href: (i) => `/institutions/${i.institution.id}?tab=domain` },
-};
 
-/** Navbar bell — same card as the panel's NotificationDropdown, fed by the Overview "needs attention" list. */
+/** Navbar bell — same card as the panel's NotificationDropdown, fed by the "needs attention" list (full page: /alerts). */
 export function ConsoleAlertsDropdown() {
   const router = useRouter();
   const store = useSaasStore();
@@ -62,7 +57,7 @@ export function ConsoleAlertsDropdown() {
   const openItem = (item: AttentionItem) => {
     markAlertsSeen([item.id]);
     setIsOpen(false);
-    router.push(KIND[item.kind].href(item));
+    router.push(ATTENTION_KIND[item.kind].href(item));
   };
 
   return (
@@ -137,7 +132,7 @@ export function ConsoleAlertsDropdown() {
             ) : (
               <ul className="max-h-96 overflow-y-auto divide-y divide-dash custom-scrollbar">
                 {latest.map((item, i) => {
-                  const meta = KIND[item.kind];
+                  const meta = ATTENTION_KIND[item.kind];
                   const Icon = meta.icon;
                   const isUnread = !seen.includes(item.id);
                   return (
@@ -147,7 +142,7 @@ export function ConsoleAlertsDropdown() {
                         onClick={() => openItem(item)}
                         className={cn("w-full p-4 flex items-start gap-3 transition-colors cursor-pointer hover:bg-slate-50 text-left", isUnread ? "bg-brand-orange-soft" : "bg-white")}
                       >
-                        <span className={cn("mt-0.5 w-9 h-9 rounded-lg flex items-center justify-center shrink-0", meta.className)}>
+                        <span className={cn("mt-0.5 w-9 h-9 rounded-lg flex items-center justify-center shrink-0", meta.tile)}>
                           <Icon className="w-4 h-4" />
                         </span>
                         <div className="flex-1 min-w-0">
@@ -165,11 +160,11 @@ export function ConsoleAlertsDropdown() {
 
             <div className="p-3 bg-slate-50 border-t border-dash text-center">
               <Link
-                href="/"
+                href="/alerts"
                 onClick={() => setIsOpen(false)}
                 className="body-sm-medium font-semibold! text-brand-orange hover:text-brand-orange-hover hover:underline transition-colors block py-1"
               >
-                {items.length > LATEST_COUNT ? `View all ${items.length} on Overview` : "Go to Overview"}
+                {items.length ? `View all ${items.length} alerts` : "Open alerts"}
               </Link>
             </div>
           </motion.div>

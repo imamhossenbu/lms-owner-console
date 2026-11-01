@@ -2,25 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRightLeft, CalendarPlus, CheckCircle2, Globe, RefreshCcw } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import type { SaasInvoice } from "@/types/saas";
 import type { AttentionItem, AttentionKind } from "@/lib/saasStats";
-import type { Tone } from "@/components/ui/ToneBadge";
 import { DashboardCard } from "../shared/DashboardCard";
 import { ToneBadge } from "@/components/ui/ToneBadge";
-import { CardActionButton } from "@/components/ui/CardActionButton";
+import { ATTENTION_KIND, ATTENTION_KINDS, AttentionAction } from "../shared/attentionMeta";
 import { InstitutionAvatar } from "../shared/InstitutionAvatar";
 import type { InstitutionDialogOpeners } from "../institutions/actions/useInstitutionDialogs";
 import type { InstitutionActions } from "../institutions/actions/useInstitutionActions";
 
-const KIND: Record<AttentionKind, { tone: Tone; label: string }> = {
-  PAST_DUE: { tone: "yellow", label: "Past due" },
-  TRIAL_ENDING: { tone: "blue", label: "Trial ending" },
-  NEAR_LIMIT: { tone: "orange", label: "Limits" },
-  DOMAIN_FAILED: { tone: "red", label: "Domain" },
-};
 
 export interface AttentionCardProps {
   items: AttentionItem[];
@@ -31,44 +23,7 @@ export interface AttentionCardProps {
 
 /** "Needs attention": trials ending ≤ 3 days, past due, near limits, failing domains — each with its fix action. */
 export function AttentionCard({ items, invoices, open, actions }: AttentionCardProps) {
-  const router = useRouter();
   const counts = items.reduce<Partial<Record<AttentionKind, number>>>((a, i) => ((a[i.kind] = (a[i.kind] ?? 0) + 1), a), {});
-
-  const action = (item: AttentionItem) => {
-    const inst = item.institution;
-    switch (item.kind) {
-      case "TRIAL_ENDING":
-        return (
-          <CardActionButton icon={<CalendarPlus className="h-4 w-4" />} onClick={() => open.extendTrial(inst)}>
-            Extend
-          </CardActionButton>
-        );
-      case "PAST_DUE": {
-        const unpaid = invoices.filter((i) => i.institutionId === inst.id && (i.status === "FAILED" || i.status === "OPEN")).sort((a, b) => b.issuedAt.localeCompare(a.issuedAt))[0];
-        return (
-          <CardActionButton
-            icon={<RefreshCcw className="h-4 w-4" />}
-            disabled={!unpaid || actions.busy === `invoice-${unpaid.id}`}
-            onClick={() => unpaid && void actions.retryInvoice(unpaid).catch(() => {})}
-          >
-            {unpaid && actions.busy === `invoice-${unpaid.id}` ? "Retrying..." : "Retry"}
-          </CardActionButton>
-        );
-      }
-      case "NEAR_LIMIT":
-        return (
-          <CardActionButton icon={<ArrowRightLeft className="h-4 w-4" />} onClick={() => open.changePlan(inst)}>
-            Upgrade
-          </CardActionButton>
-        );
-      case "DOMAIN_FAILED":
-        return (
-          <CardActionButton icon={<Globe className="h-4 w-4" />} onClick={() => router.push(`/institutions/${inst.id}?tab=domain`)}>
-            Review
-          </CardActionButton>
-        );
-    }
-  };
 
   return (
     <DashboardCard
@@ -76,11 +31,11 @@ export function AttentionCard({ items, invoices, open, actions }: AttentionCardP
       description={items.length ? `${items.length} item${items.length === 1 ? "" : "s"} to follow up` : "Everything looks healthy"}
       action={
         <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
-          {(Object.keys(KIND) as AttentionKind[])
+          {ATTENTION_KINDS
             .filter((k) => counts[k])
             .map((k) => (
-              <ToneBadge key={k} tone={KIND[k].tone} size="sm" variant="pill">
-                {KIND[k].label} {counts[k]}
+              <ToneBadge key={k} tone={ATTENTION_KIND[k].tone} size="sm" variant="pill">
+                {ATTENTION_KIND[k].label} {counts[k]}
               </ToneBadge>
             ))}
         </div>
@@ -108,7 +63,7 @@ export function AttentionCard({ items, invoices, open, actions }: AttentionCardP
                   <Link href={`/institutions/${item.institution.id}`} className="truncate body-sm-medium text-primary-500 hover:text-brand-orange" title={item.institution.name}>
                     {item.institution.name}
                   </Link>
-                  <ToneBadge tone={KIND[item.kind].tone} size="sm" variant="pill">
+                  <ToneBadge tone={ATTENTION_KIND[item.kind].tone} size="sm" variant="pill">
                     {item.title}
                   </ToneBadge>
                 </div>
@@ -116,7 +71,7 @@ export function AttentionCard({ items, invoices, open, actions }: AttentionCardP
                   {item.detail}
                 </p>
               </div>
-              {action(item)}
+              <AttentionAction item={item} invoices={invoices} open={open} actions={actions} />
             </motion.li>
           ))}
         </ul>

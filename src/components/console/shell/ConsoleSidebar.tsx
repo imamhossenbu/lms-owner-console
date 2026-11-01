@@ -9,6 +9,9 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/store/slices/uiSlice";
 import { EduProCapIcon } from "@/components/ui/EduProLogo";
 import { useSaasStore } from "@/lib/planAccess";
+import { attentionItems } from "@/lib/saasStats";
+import { useNow } from "../shared/useNow";
+import { useSeenAlerts } from "./consoleAlertsSeen";
 import { cn } from "@/lib/cn";
 import { CONSOLE_NAV, isNavActive } from "./consoleNav";
 
@@ -18,18 +21,22 @@ export function ConsoleSidebar() {
   const dispatch = useAppDispatch();
   const collapsed = useAppSelector((state) => state.ui.sidebarCollapsed);
   const store = useSaasStore();
+  const now = useNow();
+  const seen = useSeenAlerts();
 
   // Live "needs you" counts, rendered exactly like the panel's Notifications count pill.
   const counts = useMemo<Record<string, { value: number; label: string } | undefined>>(() => {
     const pastDue = store.institutions.filter((i) => i.subscription.status === "PAST_DUE").length;
     const unpaid = store.invoices.filter((i) => i.status === "FAILED" || i.status === "OPEN").length;
     const pendingDomains = store.institutions.filter((i) => i.customDomain && i.customDomain.status !== "VERIFIED").length;
+    const unreadAlerts = now && store.institutions.length ? attentionItems(store, now).filter((i) => !seen.includes(i.id)).length : 0;
     return {
+      "/alerts": unreadAlerts ? { value: unreadAlerts, label: `${unreadAlerts} unread` } : undefined,
       "/subscriptions": pastDue ? { value: pastDue, label: `${pastDue} past due` } : undefined,
       "/invoices": unpaid ? { value: unpaid, label: `${unpaid} unpaid` } : undefined,
       "/domains": pendingDomains ? { value: pendingDomains, label: `${pendingDomains} pending` } : undefined,
     };
-  }, [store]);
+  }, [store, now, seen]);
 
   return (
     <aside

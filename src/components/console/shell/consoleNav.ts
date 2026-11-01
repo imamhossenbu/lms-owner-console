@@ -1,4 +1,4 @@
-import { Building2, CreditCard, FileText, Globe, LayoutDashboard, Settings, Tags, type LucideIcon } from "lucide-react";
+import { Bell, Building2, CreditCard, FileText, Globe, LayoutDashboard, LineChart, Settings, Tags, TicketPercent, type LucideIcon } from "lucide-react";
 
 export interface ConsoleNavItem {
   href: string;
@@ -13,7 +13,14 @@ export interface ConsoleNavSection {
 
 /** Owner Console navigation (sidebar + search palette quick links). */
 export const CONSOLE_NAV: ConsoleNavSection[] = [
-  { category: "Platform", items: [{ href: "/", label: "Overview", icon: LayoutDashboard }] },
+  {
+    category: "Platform",
+    items: [
+      { href: "/", label: "Overview", icon: LayoutDashboard },
+      { href: "/alerts", label: "Alerts", icon: Bell },
+      { href: "/revenue", label: "Revenue", icon: LineChart },
+    ],
+  },
   {
     category: "Customers",
     items: [
@@ -26,6 +33,7 @@ export const CONSOLE_NAV: ConsoleNavSection[] = [
     category: "Catalogue",
     items: [
       { href: "/plans", label: "Plans & pricing", icon: Tags },
+      { href: "/coupons", label: "Coupons", icon: TicketPercent },
       { href: "/domains", label: "Domains", icon: Globe },
     ],
   },
