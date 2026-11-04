@@ -55,7 +55,7 @@ export function InstitutionsView() {
   const page = Math.min(getPage(), totalPages);
   const rows = filtered.slice((page - 1) * perPage, page * perPage);
 
-  if (!ready || !store.institutions.length) return <InstitutionsSkeleton />;
+  if (!ready) return <InstitutionsSkeleton />;
 
   const filteredState = isFiltered(filters);
   const reset = () => set(RESET_PARAMS);

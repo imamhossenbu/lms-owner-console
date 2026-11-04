@@ -1,9 +1,9 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { FeatureKey, Institution, LimitKey, Plan, PlanId, SaasStore } from "@/types/saas";
 import { PLAN_IDS } from "@/types/saas";
 import { sortPlans } from "@/lib/saasStats";
 import { buildPlans } from "@/data/mockSaasData";
-import { getSaasSnapshot, subscribeSaas } from "@/lib/saasStorage";
+import { getSaasSnapshot, isSaasSettled, refreshSaasQuietly, subscribeSaas } from "@/lib/saasStorage";
 
 /**
  * Plan access & feature gating (pure helpers + React hooks). Safe to import from client components; the pure
@@ -108,16 +108,18 @@ export function minPlanFor(feature: FeatureKey, plans: Plan[] = DEFAULT_PLANS) {
 // ---------------------------------------------------------------- hooks
 
 const EMPTY_STORE: SaasStore = { plans: [], institutions: [], invoices: [], events: [], currentInstitutionId: "" };
-const noopSubscribe = () => () => {};
-
 /** Live SaaS store. Empty on the server and during hydration (pair with `useSaasReady()` for skeletons). */
 export function useSaasStore(): SaasStore {
   return useSyncExternalStore(subscribeSaas, getSaasSnapshot, () => EMPTY_STORE);
 }
 
-/** false on the server / during hydration, true once the client store can be read. */
+/**
+ * false until the first snapshot request settled (render skeletons until then). Every mount also refreshes
+ * the snapshot in the background, so opening a page shows current data.
+ */
 export function useSaasReady(): boolean {
-  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+  useEffect(() => refreshSaasQuietly(), []);
+  return useSyncExternalStore(subscribeSaas, isSaasSettled, () => false);
 }
 
 /** The institution the admin panel is showing (null until ready). */

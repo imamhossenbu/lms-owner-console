@@ -53,7 +53,7 @@ export function AlertsView() {
 
   const items = useMemo(() => (now && store.institutions.length ? attentionItems(store, now) : []), [store, now]);
 
-  if (!ready || !now || !store.institutions.length) return <AlertsSkeleton />;
+  if (!ready || !now) return <AlertsSkeleton />;
 
   const q = query.trim().toLowerCase();
   const searched = items.filter(

@@ -29,7 +29,7 @@ export function RevenueView() {
   const months = Number(range);
 
   const data = useMemo(() => {
-    if (!now || !store.institutions.length) return null;
+    if (!now) return null;
     return { movement: mrrMovement(store, months, now), collections: collectionsSeries(store, months, now) };
   }, [store, now, months]);
 

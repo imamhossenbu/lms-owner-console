@@ -4,5 +4,8 @@
  */
 export const ADMIN_PANEL_URL = (process.env.NEXT_PUBLIC_ADMIN_PANEL_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-/** Panel URL that opens an institution as the platform owner (the panel reads `?impersonate=`). */
-export const impersonateUrl = (institutionId: string) => `${ADMIN_PANEL_URL}/?impersonate=${encodeURIComponent(institutionId)}`;
+/**
+ * Panel URL that signs in as the institution with a 1-hour impersonation token. The token rides in the URL
+ * fragment, which browsers never send to servers or in Referer headers; the panel stores it and strips it.
+ */
+export const impersonateUrl = (token: string) => `${ADMIN_PANEL_URL}/#impersonate=${encodeURIComponent(token)}`;

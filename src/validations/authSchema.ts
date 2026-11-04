@@ -13,3 +13,12 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
+
+/** 6-digit authenticator code (second sign-in step), one input per digit. */
+export const twoFactorCodeSchema = z.object({
+  digits: z
+    .array(z.string())
+    .length(6)
+    .refine((d) => d.every((x) => /^\d$/.test(x)), "Enter the 6-digit code from your authenticator app"),
+});
+export type TwoFactorCodeFormData = z.infer<typeof twoFactorCodeSchema>;

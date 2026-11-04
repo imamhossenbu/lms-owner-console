@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle2, Download, FileX2, Printer, RefreshCw, Undo2 } from "lucide-react";
-import { getConsoleSettingsSnapshot } from "@/lib/consoleSettingsStorage";
+import { useConsoleSettings } from "@/lib/consoleSettingsStorage";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 import { InvoiceStatusBadge } from "@/components/console/shared/ConsoleBadges";
@@ -20,6 +20,7 @@ import { InvoiceDetailSkeleton } from "./InvoiceDetailSkeleton";
 export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
   const { store, ready } = useConsoleSaas();
   const actions = useInvoiceActions(store, { showView: false });
+  const consoleSettings = useConsoleSettings();
   if (!ready) return <InvoiceDetailSkeleton />;
 
   const invoice = store.invoices.find((i) => i.id === invoiceId);
@@ -42,7 +43,7 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
 
   const institution = store.institutions.find((i) => i.id === invoice.institutionId);
   const plan = store.plans.find((p) => p.id === invoice.planId);
-  const settings = getConsoleSettingsSnapshot().settings;
+  const settings = consoleSettings.settings;
   const retrying = actions.retrying === invoice.id;
 
   return (

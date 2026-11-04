@@ -17,7 +17,7 @@ export function InstitutionFormView({ institutionId }: { institutionId?: string 
   const ready = useSaasReady();
   const store = useSaasStore();
   const now = useNow();
-  if (!ready || !store.institutions.length || !now) return <InstitutionFormSkeleton mode={institutionId ? "edit" : "create"} />;
+  if (!ready || !store.plans.length || !now) return <InstitutionFormSkeleton mode={institutionId ? "edit" : "create"} />;
 
   const institution = institutionId ? store.institutions.find((i) => i.id === institutionId) : undefined;
   const editing = !!institutionId;

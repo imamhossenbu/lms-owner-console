@@ -10,18 +10,21 @@ import { loginSchema, type LoginFormData } from "@/validations/authSchema";
 import { InputField } from "@/components/ui/InputField";
 import { AuthAlertBanner } from "@/components/auth/AuthAlertBanner";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { CONSOLE_OWNER, startConsoleSession } from "../shell/consoleSession";
+import { authApi } from "@/lib/api/auth";
+import { startConsoleSession } from "../shell/consoleSession";
+import { ConsoleTwoFactorStep } from "./ConsoleTwoFactorStep";
 
-/** Mock owner credentials (MOCK-DATA phase — replaced by the real auth API later). */
-const DEMO_PASSWORD = "owner123";
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const PLATFORM_OWNER_ROLE = "SUPER_ADMIN";
+const errorText = (err: unknown) => (err instanceof Error ? err.message : "Sign-in failed. Please try again.");
 
-/** Owner Console sign-in form (react-hook-form + zod, loading → success / error toasts). */
+/** Owner Console sign-in (react-hook-form + zod): password → optional 2FA code → platform-owner check. */
 export function ConsoleLoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState<{ token: string; email: string } | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const {
     register,
     handleSubmit,
@@ -29,24 +32,66 @@ export function ConsoleLoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
-    defaultValues: { email: CONSOLE_OWNER.email, password: DEMO_PASSWORD, rememberMe: true },
+    defaultValues: { email: "", password: "", rememberMe: true },
   });
+
+  /** Only platform owners may use the console; anyone else is turned away before a session is stored. */
+  const finishSignIn = async (token: string, toastId: string | number) => {
+    const profile = await authApi.profile(token);
+    if (profile.role !== PLATFORM_OWNER_ROLE) throw new Error("These credentials don't belong to a platform owner account.");
+    startConsoleSession(token, profile);
+    toast.success(`Welcome back, ${profile.name.split(" ")[0] || "owner"}!`, { id: toastId, description: "Opening the Owner Console..." });
+    const next = params.get("next");
+    router.push(next && next.startsWith("/") && !next.startsWith("//") && next !== "/login" ? next : "/");
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     setServerError(null);
     const toastId = toast.loading("Signing in to the Owner Console...", { description: "Verifying platform owner credentials" });
-    await wait(700);
-    if (data.email.trim().toLowerCase() !== CONSOLE_OWNER.email || data.password !== DEMO_PASSWORD) {
-      const message = "These credentials don't belong to a platform owner account.";
-      setServerError(message);
-      toast.error("Sign-in failed", { id: toastId, description: message });
-      return;
+    try {
+      const email = data.email.trim().toLowerCase();
+      const res = await authApi.login(email, data.password);
+      if (res.twoFactorRequired) {
+        setChallenge({ token: res.challengeToken, email });
+        toast.info("Enter your authentication code", { id: toastId, description: "Open your authenticator app to finish signing in." });
+        return;
+      }
+      await finishSignIn(res.token, toastId);
+    } catch (err) {
+      setServerError(errorText(err));
+      toast.error("Sign-in failed", { id: toastId, description: errorText(err) });
     }
-    startConsoleSession(data.email);
-    toast.success(`Welcome back, ${CONSOLE_OWNER.name.split(" ")[0]}!`, { id: toastId, description: "Opening the Owner Console..." });
-    const next = params.get("next");
-    router.push(next && next.startsWith("/") && next !== "/login" ? next : "/");
   };
+
+  const onSubmitCode = async (code: string) => {
+    if (!challenge) return;
+    setServerError(null);
+    setVerifying(true);
+    const toastId = toast.loading("Verifying code...", { description: challenge.email });
+    try {
+      const res = await authApi.twoFactorLogin(challenge.token, code);
+      await finishSignIn(res.token, toastId);
+    } catch (err) {
+      setServerError(errorText(err));
+      toast.error("Verification failed", { id: toastId, description: errorText(err) });
+      setVerifying(false);
+    }
+  };
+
+  if (challenge)
+    return (
+      <ConsoleTwoFactorStep
+        email={challenge.email}
+        isSubmitting={verifying}
+        serverError={serverError}
+        onClearError={() => setServerError(null)}
+        onSubmit={onSubmitCode}
+        onBack={() => {
+          setChallenge(null);
+          setServerError(null);
+        }}
+      />
+    );
 
   return (
     <>
@@ -84,9 +129,6 @@ export function ConsoleLoginForm() {
         <AuthSubmitButton isSubmitting={isSubmitting} submittingText="Signing in...">
           Sign in to Console
         </AuthSubmitButton>
-        <p className="rounded-xl border border-dash bg-gray-bg px-4 py-3 body-xsm-regular text-primary-400">
-          Demo owner: <span className="body-xsm-medium text-primary-500">{CONSOLE_OWNER.email}</span> / <span className="body-xsm-medium text-primary-500">{DEMO_PASSWORD}</span>
-        </p>
       </form>
     </>
   );

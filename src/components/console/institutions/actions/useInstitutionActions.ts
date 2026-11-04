@@ -81,10 +81,20 @@ export function useInstitutionActions() {
     saveNotes: (inst: Institution, notes: string) =>
       run(`notes-${inst.id}`, ["Saving notes...", inst.name], () => ["Notes saved", "Only platform owners can see these notes."], "Couldn't save notes", () => saas.updateInstitution(inst.id, { notes })),
     impersonate: (inst: Institution) =>
-      run(`open-${inst.id}`, ["Opening institution panel...", inst.name], () => ["Opened as owner", `You're now viewing ${inst.name}'s admin panel.`], "Couldn't open the panel", async () => {
-        // The panel is a separate app: it switches to this institution from `?impersonate=`.
-        window.open(impersonateUrl(inst.id), "_blank", "noopener");
-        return inst;
+      run(`open-${inst.id}`, ["Opening institution panel...", inst.name], () => ["Opened as owner", `You're now viewing ${inst.name}'s admin panel (access lasts 1 hour).`], "Couldn't open the panel", async () => {
+        // Open the tab synchronously (popup blockers), then hand it the 1-hour token from the API.
+        const tab = window.open("", "_blank");
+        try {
+          const { token } = await saas.impersonateInstitution(inst.id);
+          if (tab) {
+            tab.opener = null;
+            tab.location.href = impersonateUrl(token);
+          } else window.open(impersonateUrl(token), "_blank", "noopener");
+          return inst;
+        } catch (e) {
+          tab?.close();
+          throw e;
+        }
       }),
   };
 }

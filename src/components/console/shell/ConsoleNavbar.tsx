@@ -12,13 +12,13 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ADMIN_PANEL_URL } from "@/lib/adminPanel";
 import { ConsoleSearch } from "./ConsoleSearch";
 import { ConsoleAlertsDropdown } from "./ConsoleAlertsDropdown";
-import { CONSOLE_OWNER, endConsoleSession, type ConsoleSession } from "./consoleSession";
+import { endConsoleSession, type ConsoleSession } from "./consoleSession";
 
 /** Owner Console top bar — same layout as the panel's AdminNavbar: toggle + search · panel link, bell, profile pill. */
 export function ConsoleNavbar({ session }: { session: ConsoleSession | null | undefined }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const owner = session ?? { ...CONSOLE_OWNER, signedInAt: "" };
+  const owner = session ?? { name: "Platform owner", email: "", role: "Platform owner" as const };
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const fitRef = useRef<HTMLDivElement>(null);

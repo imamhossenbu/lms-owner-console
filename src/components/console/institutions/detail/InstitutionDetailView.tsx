@@ -46,7 +46,7 @@ export function InstitutionDetailView({ institutionId }: { institutionId: string
   const { open, dialogs } = useInstitutionDialogs(store.plans, actions);
   const inst = useMemo(() => store.institutions.find((i) => i.id === institutionId), [store.institutions, institutionId]);
 
-  if (!ready || !store.institutions.length || !now) return <DetailSkeleton tab={tab} />;
+  if (!ready || !now) return <DetailSkeleton tab={tab} />;
 
   if (!inst)
     return (

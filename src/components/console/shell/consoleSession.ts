@@ -3,21 +3,23 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Mock Owner Console session (separate from the institution admin login). Stored in localStorage so a reload
- * keeps the owner signed in; ConsoleShell redirects to /console/login when it is missing.
+ * Owner Console session: the platform owner's API token + profile (separate from the institution admin login).
+ * Kept in localStorage so a reload keeps the owner signed in; ConsoleShell redirects to /login when it's missing.
+ * The API rejects expired tokens with 401, which ends the session (see `apiRequest`).
  */
 
-const KEY = "edupro_console_session_v1";
+const KEY = "edupro_console_session_v2";
+const LEGACY_KEY = "edupro_console_session_v1";
 const EVENT = "edupro_console_session_changed";
 
 export interface ConsoleSession {
+  token: string;
+  userId: string;
   name: string;
   email: string;
   role: "Platform owner";
   signedInAt: string;
 }
-
-export const CONSOLE_OWNER = { name: "Imam Hossain", email: "imam.adsfixter@gmail.com", role: "Platform owner" as const };
 
 let cachedRaw: string | null | undefined;
 let cached: ConsoleSession | null = null;
@@ -32,7 +34,8 @@ function read(): ConsoleSession | null {
   if (raw === cachedRaw) return cached;
   cachedRaw = raw;
   try {
-    cached = raw ? (JSON.parse(raw) as ConsoleSession) : null;
+    const parsed = raw ? (JSON.parse(raw) as ConsoleSession) : null;
+    cached = parsed?.token ? parsed : null;
   } catch {
     cached = null;
   }
@@ -54,14 +57,21 @@ export function useConsoleSession(): ConsoleSession | null | undefined {
   return useSyncExternalStore(subscribe, read, () => undefined);
 }
 
-export function startConsoleSession(email: string) {
-  const session: ConsoleSession = { ...CONSOLE_OWNER, email: email.trim().toLowerCase(), signedInAt: new Date().toISOString() };
+export function getConsoleToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return read()?.token ?? null;
+}
+
+export function startConsoleSession(token: string, user: { id: string; name: string; email: string }) {
+  const session: ConsoleSession = { token, userId: user.id, name: user.name, email: user.email, role: "Platform owner", signedInAt: new Date().toISOString() };
   localStorage.setItem(KEY, JSON.stringify(session));
+  localStorage.removeItem(LEGACY_KEY);
   window.dispatchEvent(new Event(EVENT));
   return session;
 }
 
 export function endConsoleSession() {
+  if (typeof window === "undefined") return;
   localStorage.removeItem(KEY);
   window.dispatchEvent(new Event(EVENT));
 }

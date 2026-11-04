@@ -79,7 +79,7 @@ export function InstitutionForm({ mode, plans, institution, now }: InstitutionFo
     const toastId = toast.loading(mode === "create" ? "Creating institution..." : "Saving changes...", { description: values.name });
     try {
       if (mode === "create") {
-        const inst = await createInstitution(values, "OWNER_CREATED");
+        const inst = await createInstitution(values);
         toast.success("Institution created", {
           id: toastId,
           description: values.startWithTrial ? `${inst.name} is live at ${inst.slug}.edupro.com with a ${values.trialDays}-day trial.` : `${inst.name} is live at ${inst.slug}.edupro.com. First invoice issued.`,

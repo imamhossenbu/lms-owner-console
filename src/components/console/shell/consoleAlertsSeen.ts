@@ -1,55 +1,76 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { toast } from "sonner";
+import { api, fetchAllPages } from "@/lib/api/client";
 
-/** Which navbar alerts (attention item ids) the owner has already opened — localStorage, survives reloads. */
-const KEY = "edupro_console_alerts_seen_v1";
+/**
+ * Which "needs attention" alerts the owner has already opened, stored per owner on the server
+ * (`/saas/owner/alerts`). Updates are optimistic; a failed save rolls back and shows a toast.
+ * Alert ids are `<institutionId>-trial|pastdue|limit|domain`, the same on both sides.
+ */
 const EVENT = "edupro_console_alerts_seen_changed";
 const EMPTY: string[] = [];
+const MAX_IDS_PER_CALL = 500;
 
-let cachedRaw: string | null | undefined;
-let cached: string[] = EMPTY;
+let seen: string[] = EMPTY;
+let loaded = false;
+let inflight: Promise<void> | null = null;
 
-function read(): string[] {
-  let raw: string | null = null;
-  try {
-    raw = localStorage.getItem(KEY);
-  } catch {
-    raw = null;
-  }
-  if (raw === cachedRaw) return cached;
-  cachedRaw = raw;
-  try {
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    cached = Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : EMPTY;
-  } catch {
-    cached = EMPTY;
-  }
-  return cached;
+function set(next: string[]) {
+  seen = next;
+  window.dispatchEvent(new Event(EVENT));
 }
 
 function subscribe(cb: () => void) {
   const handler = () => queueMicrotask(cb);
   window.addEventListener(EVENT, handler);
-  window.addEventListener("storage", handler);
-  return () => {
-    window.removeEventListener(EVENT, handler);
-    window.removeEventListener("storage", handler);
-  };
+  return () => window.removeEventListener(EVENT, handler);
 }
 
+function load() {
+  inflight ??= fetchAllPages<{ id: string }>("/saas/owner/alerts", { status: "read" })
+    .then((rows) => {
+      loaded = true;
+      set(rows.map((r) => r.id));
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
+}
+
+/** Read alert ids (empty until loaded). */
 export function useSeenAlerts(): string[] {
-  return useSyncExternalStore(subscribe, read, () => EMPTY);
+  const ids = useSyncExternalStore(subscribe, () => seen, () => EMPTY);
+  useEffect(() => {
+    if (!loaded) void load();
+  }, []);
+  return ids;
+}
+
+async function save(path: "read" | "unread", ids: string[], before: string[]) {
+  try {
+    for (let i = 0; i < ids.length; i += MAX_IDS_PER_CALL) await api.post(`/saas/owner/alerts/${path}`, { ids: ids.slice(i, i + MAX_IDS_PER_CALL) });
+  } catch (err) {
+    set(before);
+    toast.error("Couldn't update alerts", { id: "alerts-seen", description: err instanceof Error ? err.message : "Please try again." });
+  }
 }
 
 export function markAlertsSeen(ids: string[]) {
-  const next = Array.from(new Set([...read(), ...ids])).slice(-500);
-  localStorage.setItem(KEY, JSON.stringify(next));
-  window.dispatchEvent(new Event(EVENT));
+  const fresh = [...new Set(ids)].filter((id) => !seen.includes(id));
+  if (!fresh.length) return;
+  const before = seen;
+  set([...seen, ...fresh]);
+  void save("read", fresh, before);
 }
 
 export function markAlertsUnseen(ids: string[]) {
-  const drop = new Set(ids);
-  localStorage.setItem(KEY, JSON.stringify(read().filter((id) => !drop.has(id))));
-  window.dispatchEvent(new Event(EVENT));
+  const drop = new Set(ids.filter((id) => seen.includes(id)));
+  if (!drop.size) return;
+  const before = seen;
+  set(seen.filter((id) => !drop.has(id)));
+  void save("unread", [...drop], before);
 }

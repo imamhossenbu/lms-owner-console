@@ -31,7 +31,7 @@ export function OverviewView() {
   const { open, dialogs } = useInstitutionDialogs(store.plans, actions);
 
   const data = useMemo(() => {
-    if (!now || !store.institutions.length) return null;
+    if (!now) return null;
     return {
       kpis: overviewKpis(store, now),
       sparks: kpiSparks(store, 8, now),
