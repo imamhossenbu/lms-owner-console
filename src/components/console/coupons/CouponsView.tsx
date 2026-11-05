@@ -4,10 +4,9 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Plus, SearchX, TicketPercent } from "lucide-react";
-import type { Coupon, CouponStatus } from "@/types/coupon";
+import type { CouponStatus } from "@/types/coupon";
 import { COUPON_STATUSES } from "@/types/coupon";
-import { useCoupons } from "@/lib/couponStorage";
-import { couponStatus } from "@/lib/couponMath";
+import { useCouponPage } from "@/lib/couponStorage";
 import { useSaasReady, useSaasStore } from "@/lib/planAccess";
 import { useUrlParams } from "@/lib/useUrlParams";
 import { ListFilters } from "@/components/ui/ListFilters";
@@ -27,31 +26,28 @@ const PAGE_SIZES = [10, 20, 50];
 /** /coupons — discount codes with status, redemptions and expiry. `?q`, `?status`, `?type`, `?page`, `?size` survive reloads. */
 export function CouponsView() {
   const router = useRouter();
-  const coupons = useCoupons();
   const ready = useSaasReady();
   const store = useSaasStore();
   const now = useNow();
   const { get, getPage, set } = useUrlParams();
   const actions = useCouponActions();
 
-  if (!coupons || !ready || !now) return <CouponsSkeleton />;
-
   const query = get("q");
   const status = COUPON_STATUSES.includes(get("status") as CouponStatus) ? (get("status") as CouponStatus) : "All";
   const type = get("type") === "PERCENT" || get("type") === "FIXED" ? get("type") : "All";
   const sizeParam = Number(get("size"));
   const pageSize = PAGE_SIZES.includes(sizeParam) ? sizeParam : 10;
-
-  const q = query.trim().toLowerCase();
-  const filtered = coupons.filter(
-    (c: Coupon) =>
-      (status === "All" || couponStatus(c, now) === status) &&
-      (type === "All" || c.type === type) &&
-      (!q || c.code.toLowerCase().includes(q) || c.description.toLowerCase().includes(q))
+  const q = query.trim();
+  // The server searches, filters and pages; KPIs come from /coupons/stats.
+  const { rows, total, stats, isLoading } = useCouponPage(
+    { q: q || undefined, status: status === "All" ? undefined : status, type: type === "All" ? undefined : type },
+    getPage(),
+    pageSize
   );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const page = Math.min(getPage(), totalPages);
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  if (isLoading || !stats || !ready || !now) return <CouponsSkeleton />;
+
+  const page = Math.min(getPage(), Math.max(1, Math.ceil(total / pageSize)));
   const isFiltered = !!q || status !== "All" || type !== "All";
   const reset = () => set({ q: null, status: null, type: null, page: null });
 
@@ -68,7 +64,7 @@ export function CouponsView() {
         }
       />
 
-      <CouponKpis coupons={coupons} now={now} />
+      <CouponKpis stats={stats} />
 
       <div className="bg-white rounded-xl border border-dash shadow-2xs p-5 space-y-4">
         <ListFilters
@@ -103,12 +99,12 @@ export function CouponsView() {
             )
           }
           footer={
-            filtered.length > 0 ? (
+            total > 0 ? (
               <TablePagination
                 currentPage={page}
                 pageSize={pageSize}
-                totalCount={filtered.length}
-                itemLabel={filtered.length === 1 ? "coupon" : "coupons"}
+                totalCount={total}
+                itemLabel={total === 1 ? "coupon" : "coupons"}
                 onPageChange={(next) => set({ page: next })}
                 onPageSizeChange={(size) => set({ size: size === 10 ? null : size, page: null })}
                 pageSizeOptions={PAGE_SIZES}

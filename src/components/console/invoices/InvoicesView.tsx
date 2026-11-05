@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { fetchInvoicesMatching, useInvoicePage, type InvoiceFilters } from "@/lib/invoicePages";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -11,7 +12,6 @@ import { useUrlParams } from "@/lib/useUrlParams";
 import { ListFilters } from "@/components/ui/ListFilters";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { SecondaryButton } from "@/components/ui/secondary-button";
-import { isInDateRange } from "@/components/ui/DateRangeFilter";
 import { downloadFile, toCsv, todayStamp } from "@/components/commerce/exportFile";
 import { INVOICE_STATUS_META } from "@/components/console/shared/consoleMeta";
 import { ConsoleHeader } from "@/components/console/subscriptions/shared/ConsoleHeader";
@@ -45,27 +45,31 @@ export function InvoicesView() {
   const institutions = useMemo(() => new Map(store.institutions.map((i) => [i.id, i])), [store.institutions]);
   const planName = (id: string) => store.plans.find((p) => p.id === id)?.name ?? id;
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = store.invoices.filter((inv) => {
-      const inst = institutions.get(inv.institutionId);
-      return (
-        (status === "All" || inv.status === status) &&
-        (plan === "All" || inv.planId === plan) &&
-        isInDateRange(inv.issuedAt, { from, to }) &&
-        (!q || inv.number.toLowerCase().includes(q) || !!inst?.name.toLowerCase().includes(q) || !!inst?.slug.includes(q))
-      );
-    });
-    const m = dir === "asc" ? 1 : -1;
-    return list.sort((a, b) => (sort === "amount" ? a.total - b.total : a.issuedAt.localeCompare(b.issuedAt)) * m);
-  }, [store.invoices, institutions, query, status, plan, from, to, sort, dir]);
+  // The server searches, filters, sorts and pages (all invoices, not only the snapshot's window).
+  const filters: InvoiceFilters = {
+    q: query.trim() || undefined,
+    status: status === "All" ? undefined : status,
+    planId: plan === "All" ? undefined : plan,
+    from,
+    to,
+    sort,
+    dir,
+  };
+  const { rows, total, stats, isLoading } = useInvoicePage(filters, page, pageSize);
 
-  if (!ready) return <InvoicesSkeleton />;
+  if (!ready || isLoading || !stats) return <InvoicesSkeleton />;
 
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
   const isFiltered = !!query || status !== "All" || plan !== "All" || !!from || !!to;
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
+    const id = toast.loading("Preparing export...", { description: "Reading every matching invoice." });
+    let filtered;
+    try {
+      filtered = await fetchInvoicesMatching(filters);
+    } catch (err) {
+      toast.error("Couldn't export invoices", { id, description: err instanceof Error ? err.message : "Please try again." });
+      return;
+    }
     const csv = toCsv(
       ["Number", "Institution", "Plan", "Cycle", "Period start", "Period end", "Amount", "Tax", "Total", "Status", "Issued", "Paid"],
       filtered.map((i) => [
@@ -84,7 +88,7 @@ export function InvoicesView() {
       ])
     );
     downloadFile(csv, `edupro_invoices_${todayStamp()}.csv`, "text/csv");
-    toast.success("Export downloaded", { description: `${filtered.length} invoice(s) exported to CSV.` });
+    toast.success("Export downloaded", { id, description: `${filtered.length} invoice(s) exported to CSV.` });
   };
 
   return (
@@ -94,12 +98,12 @@ export function InvoicesView() {
         title="Invoices"
         subtitle="Subscription invoices issued to institutions — collect, retry, refund and download."
         actions={
-          <SecondaryButton size="lg" type="button" leftIcon={<FileDown className="h-4 w-4" />} onClick={exportCsv} disabled={!filtered.length}>
+          <SecondaryButton size="lg" type="button" leftIcon={<FileDown className="h-4 w-4" />} onClick={() => void exportCsv()} disabled={!total}>
             Export CSV
           </SecondaryButton>
         }
       />
-      <InvoiceKpis invoices={store.invoices} />
+      <InvoiceKpis stats={stats} />
 
       <div className="space-y-4 rounded-xl border border-dash bg-white p-5 shadow-2xs">
         <ListFilters
@@ -140,7 +144,7 @@ export function InvoicesView() {
             <TablePagination
               currentPage={page}
               pageSize={pageSize}
-              totalCount={filtered.length}
+              totalCount={total}
               itemLabel="invoices"
               onPageChange={(next) => set({ page: next })}
               onPageSizeChange={(size) => set({ size: size === 10 ? null : size, page: null })}

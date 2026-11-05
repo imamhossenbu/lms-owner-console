@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import type { SaasInvoice } from "@/types/saas";
+import { fetchInvoice } from "@/lib/invoicePages";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle2, Download, FileX2, Printer, RefreshCw, Undo2 } from "lucide-react";
@@ -21,9 +23,23 @@ export function InvoiceDetailView({ invoiceId }: { invoiceId: string }) {
   const { store, ready } = useConsoleSaas();
   const actions = useInvoiceActions(store, { showView: false });
   const consoleSettings = useConsoleSettings();
-  if (!ready) return <InvoiceDetailSkeleton />;
+  // Invoices older than the store's ~15-month window are read on their own.
+  const inStore = store.invoices.find((i) => i.id === invoiceId);
+  const [fetched, setFetched] = useState<{ id: string; invoice: SaasInvoice | null } | null>(null);
+  useEffect(() => {
+    if (!ready || inStore || fetched?.id === invoiceId) return;
+    let alive = true;
+    fetchInvoice(invoiceId).then(
+      (inv) => alive && setFetched({ id: invoiceId, invoice: inv }),
+      () => alive && setFetched({ id: invoiceId, invoice: null })
+    );
+    return () => {
+      alive = false;
+    };
+  }, [ready, inStore, fetched, invoiceId]);
+  if (!ready || (!inStore && fetched?.id !== invoiceId)) return <InvoiceDetailSkeleton />;
 
-  const invoice = store.invoices.find((i) => i.id === invoiceId);
+  const invoice = inStore ?? fetched?.invoice ?? undefined;
   if (!invoice)
     return (
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-5 text-left">
