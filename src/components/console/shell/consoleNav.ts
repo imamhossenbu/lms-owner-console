@@ -1,4 +1,4 @@
-import { Bell, Building2, CreditCard, FileText, Globe, LayoutDashboard, LineChart, Settings, Tags, TicketPercent, type LucideIcon, MessageSquareQuote } from "lucide-react";
+import { Bell, Building2, CreditCard, FileText, Globe, LayoutDashboard, LineChart, Settings, Tags, TicketPercent, type LucideIcon, MessageSquareQuote, Newspaper } from "lucide-react";
 
 export interface ConsoleNavItem {
   href: string;
@@ -36,6 +36,7 @@ export const CONSOLE_NAV: ConsoleNavSection[] = [
       { href: "/coupons", label: "Coupons", icon: TicketPercent },
       { href: "/domains", label: "Domains", icon: Globe },
       { href: "/testimonials", label: "Testimonials", icon: MessageSquareQuote },
+      { href: "/blog", label: "Blog", icon: Newspaper },
     ],
   },
   { category: "System", items: [{ href: "/settings", label: "Settings", icon: Settings }] },
