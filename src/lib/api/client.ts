@@ -49,8 +49,9 @@ export async function apiRequest<T>(method: string, path: string, body?: unknown
   try {
     res = await fetch(url, {
       method,
-      headers: { ...(body !== undefined ? { "content-type": "application/json" } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      // FormData (file uploads) sets its own multipart content type.
+      headers: { ...(body !== undefined && !(body instanceof FormData) ? { "content-type": "application/json" } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(NETWORK_MESSAGE, 0);

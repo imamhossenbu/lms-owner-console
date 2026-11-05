@@ -2,7 +2,6 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { FeatureKey, Institution, LimitKey, Plan, PlanId, SaasStore } from "@/types/saas";
 import { PLAN_IDS } from "@/types/saas";
 import { sortPlans } from "@/lib/saasStats";
-import { buildPlans } from "@/data/mockSaasData";
 import { getSaasSnapshot, isSaasSettled, refreshSaasQuietly, subscribeSaas } from "@/lib/saasStorage";
 
 /**
@@ -10,7 +9,7 @@ import { getSaasSnapshot, isSaasSettled, refreshSaasQuietly, subscribeSaas } fro
  * helpers also work in scripts / server code (the hooks are only *called* in client components).
  *
  * Pure
- *  - `PLAN_ORDER` (starter → enterprise), `FEATURE_META` (label, description, lucide icon name, minPlan),
+ *  - `PLAN_ORDER` (starter → enterprise), `FEATURE_META` (label, description, lucide icon name),
  *    `LIMIT_META` (label, unit, lucide icon name, description), `formatLimit(n|null, key?)` ("Unlimited", "50 GB").
  *  - `planOf(inst, plans)`, `hasFeature(planOrInst, feature, plans?)` (suspended / cancelled → false),
  *    `limitFor(plan, key)`, `isAtLimit(inst, key, plan)`, `remaining(inst, key, plan)`, `minPlanFor(feature, plans)`.
@@ -23,30 +22,27 @@ import { getSaasSnapshot, isSaasSettled, refreshSaasQuietly, subscribeSaas } fro
 /** Built-in tier order. For ordering real plan lists (incl. custom plans) use `sortPlans(plans)` from saasStats. */
 export const PLAN_ORDER: readonly PlanId[] = PLAN_IDS;
 
-/** Default plan catalogue (used when a caller doesn't pass the live plans). */
-const DEFAULT_PLANS: Plan[] = buildPlans(0);
+/** Callers pass the live plans (store.plans); with none given, nothing is known about plans. */
+const DEFAULT_PLANS: Plan[] = [];
 
 export interface FeatureMeta {
   label: string;
   description: string;
   /** lucide-react icon component name. */
   icon: "Video" | "Award" | "MessagesSquare" | "Sparkles" | "BarChart3" | "Globe" | "Palette" | "Code2" | "Headphones";
-  /** Cheapest default plan that includes the feature. */
-  minPlan: PlanId;
 }
 
-const minPlanDefault = (feature: FeatureKey): PlanId => PLAN_ORDER.find((id) => DEFAULT_PLANS.find((p) => p.id === id)?.features.includes(feature)) ?? "enterprise";
 
 export const FEATURE_META: Record<FeatureKey, FeatureMeta> = {
-  liveClasses: { label: "Live classes", description: "Schedule and host live sessions with attendance and recordings.", icon: "Video", minPlan: minPlanDefault("liveClasses") },
-  certificates: { label: "Certificates", description: "Issue branded, verifiable completion certificates.", icon: "Award", minPlan: minPlanDefault("certificates") },
-  community: { label: "Community", description: "Discussion spaces, posts and moderation for learners.", icon: "MessagesSquare", minPlan: minPlanDefault("community") },
-  aiAssistant: { label: "AI assistant", description: "Generate course outlines, quizzes and lesson drafts with AI.", icon: "Sparkles", minPlan: minPlanDefault("aiAssistant") },
-  advancedAnalytics: { label: "Advanced analytics", description: "Cohort, engagement and revenue analytics with exports.", icon: "BarChart3", minPlan: minPlanDefault("advancedAnalytics") },
-  customDomain: { label: "Custom domain", description: "Serve your academy on your own domain with free SSL.", icon: "Globe", minPlan: minPlanDefault("customDomain") },
-  whiteLabel: { label: "White-label branding", description: "Remove EduPro branding from emails, certificates and pages.", icon: "Palette", minPlan: minPlanDefault("whiteLabel") },
-  apiAccess: { label: "API access", description: "REST API and webhooks for integrations.", icon: "Code2", minPlan: minPlanDefault("apiAccess") },
-  prioritySupport: { label: "Priority support", description: "Dedicated success manager and 4-hour response SLA.", icon: "Headphones", minPlan: minPlanDefault("prioritySupport") },
+  liveClasses: { label: "Live classes", description: "Schedule and host live sessions with attendance and recordings.", icon: "Video" },
+  certificates: { label: "Certificates", description: "Issue branded, verifiable completion certificates.", icon: "Award" },
+  community: { label: "Community", description: "Discussion spaces, posts and moderation for learners.", icon: "MessagesSquare" },
+  aiAssistant: { label: "AI assistant", description: "Generate course outlines, quizzes and lesson drafts with AI.", icon: "Sparkles" },
+  advancedAnalytics: { label: "Advanced analytics", description: "Cohort, engagement and revenue analytics with exports.", icon: "BarChart3" },
+  customDomain: { label: "Custom domain", description: "Serve your academy on your own domain with free SSL.", icon: "Globe" },
+  whiteLabel: { label: "White-label branding", description: "Remove EduPro branding from emails, certificates and pages.", icon: "Palette" },
+  apiAccess: { label: "API access", description: "REST API and webhooks for integrations.", icon: "Code2" },
+  prioritySupport: { label: "Priority support", description: "Dedicated success manager and 4-hour response SLA.", icon: "Headphones" },
 };
 
 export interface LimitMeta {

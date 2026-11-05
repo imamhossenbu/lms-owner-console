@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { ImageIcon, Loader2, RefreshCw, Trash2, UploadCloud } from "lucide-react";
-import { mockUploadFile } from "@/lib/mockUpload";
+import { uploadConsoleImage } from "@/lib/upload";
 import { cn } from "@/lib/cn";
 
 export interface UploadTileProps {
@@ -33,7 +33,7 @@ const humanTypes = (accept: string) =>
     .join(", ");
 
 /**
- * Dashed drop/click tile → mockUploadFile with loading/success/error toasts, then a preview
+ * Dashed drop/click tile → uploadConsoleImage (real upload) with loading/success/error toasts, then a preview
  * with Replace / Remove. Only the hosted URL reaches the form; the blob preview is screen-only.
  */
 export function UploadTile({ label, value, onChange, accept, maxMb, aspect, helper, onPreviewChange, dark, id }: UploadTileProps) {
@@ -85,7 +85,7 @@ export function UploadTile({ label, value, onChange, accept, maxMb, aspect, help
     setUploading(true);
     const toastId = toast.loading(`Uploading ${label.toLowerCase()}...`, { description: file.name });
     try {
-      const { url } = await mockUploadFile(file);
+      const { url } = await uploadConsoleImage(file);
       if (!url) throw new Error("Missing URL");
       if (alive.current) {
         setLocal({ url: blob, forValue: url });
