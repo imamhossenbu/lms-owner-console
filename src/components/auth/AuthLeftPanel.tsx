@@ -1,5 +1,6 @@
 import React from "react";
 import { EduProLogo } from "@/components/ui/EduProLogo";
+import { WEBSITE_URL } from "@/lib/website";
 import { AuthFeature, AuthFeatureList } from "./AuthFeatureList";
 
 /** Alpha mask that fades the mockup image in from the left (black = fully visible). */
@@ -51,7 +52,7 @@ export function AuthLeftPanel({
 
       {/* Top Brand Header Row */}
       <div className="relative z-10 flex items-center justify-between p-7 sm:p-10 lg:pl-12 xl:pl-14 lg:pr-8 xl:pr-10 lg:pt-12 xl:pt-14 pb-0">
-        <EduProLogo variant="light" size="md" subtitle={brandSubtitle} />
+        <EduProLogo href={WEBSITE_URL} variant="light" size="md" subtitle={brandSubtitle} />
         {topBadge}
       </div>
 

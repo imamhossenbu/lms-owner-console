@@ -6,6 +6,8 @@ interface EduProLogoProps {
   showText?: boolean;
   subtitle?: string;
   className?: string;
+  /** Makes the logo a link (e.g. to the marketing website on the auth pages). */
+  href?: string;
 }
 
 /**
@@ -71,6 +73,7 @@ export function EduProLogo({
   showText = true,
   subtitle = "LMS Admin Panel",
   className = "",
+  href,
 }: EduProLogoProps) {
   const iconSizes = {
     sm: "w-7 h-7",
@@ -82,7 +85,7 @@ export function EduProLogo({
   const isLight = variant === "light";
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <Wrapper href={href} className={`flex items-center gap-3 ${className}`}>
       <div className="shrink-0 flex items-center justify-center">
         <EduProCapIcon className={iconSizes[size]} />
       </div>
@@ -118,6 +121,16 @@ export function EduProLogo({
           )}
         </div>
       )}
-    </div>
+    </Wrapper>
+  );
+}
+
+/** <a> when the logo links somewhere (hover dims it slightly), otherwise a plain <div>. */
+function Wrapper({ href, className, children }: { href?: string; className: string; children: React.ReactNode }) {
+  if (!href) return <div className={className}>{children}</div>;
+  return (
+    <a href={href} className={`${className} transition-opacity hover:opacity-80`} aria-label="EduPro home">
+      {children}
+    </a>
   );
 }

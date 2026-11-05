@@ -1,5 +1,6 @@
 import React from "react";
 import { EduProLogo } from "@/components/ui/EduProLogo";
+import { WEBSITE_URL } from "@/lib/website";
 
 interface AuthRightPanelProps {
   title: string;
@@ -32,6 +33,7 @@ export function AuthRightPanel({
         {/* Brand Header */}
         <div className="mb-7 sm:mb-8">
           <EduProLogo
+            href={WEBSITE_URL}
             variant="orange"
             size="lg"
             subtitle={brandSubtitle}
